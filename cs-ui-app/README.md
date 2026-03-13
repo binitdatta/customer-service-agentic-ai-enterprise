@@ -1,0 +1,3 @@
+pip install Flask==3.0.3 python-dotenv==1.0.1 requests==2.32.3 Authlib==1.3.1
+
+pip install Flask-Session

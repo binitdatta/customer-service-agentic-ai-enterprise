@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{{ title or "CS UI" }}</title>
+
+    <!-- Bootstrap 5 (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  </head>
+  <body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('ui.home') }}">CS UI</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav"
+            aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="topNav">
+      <!-- LEFT -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('ui.home') }}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('ui.chat') }}">Chat</a></li>
+
+        <!-- ✅ DO NOT CHANGE: existing dropdown stays as-is (kept intact) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="genaiDropdown" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Gen AI Concepts
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="genaiDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('ui.genai_concepts') }}">Overview</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.langchain') }}">LangChain</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.langgraph') }}">LangGraph</a></li>
+
+            <!-- NEW (added under the same dropdown, after existing items) -->
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.agentic_ai_fundamentals') }}">Agentic AI Fundamentals</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.prompting_structured_output') }}">Prompt Engineering & Structured Output</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.state_memory') }}">State & Memory</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.rag') }}">RAG (Retrieval-Augmented Generation)</a></li>
+          </ul>
+        </li>
+
+        <!-- NEW Dropdown: Architecture -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="archDropdown" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Architecture
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="archDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('ui.tool_calling_architecture') }}">Tool Calling Architecture</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.policy_guardrails') }}">Policy Engine & Guardrails</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.human_in_the_loop') }}">Human-in-the-Loop & Escalation</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.multi_agent') }}">Multi-Agent Architecture</a></li>
+          </ul>
+        </li>
+
+        <!-- NEW Dropdown: Security & IAM -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="securityDropdown" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Security & IAM
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="securityDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('ui.keycloak_oidc') }}">Keycloak + OAuth2/OIDC</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.scopes_rbac') }}">Scopes / RBAC for Agent Actions</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.pii_safety') }}">PII Safety & Data Redaction</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.abuse_prevention') }}">Abuse & Prompt-Injection Defense</a></li>
+          </ul>
+        </li>
+
+        <!-- NEW Dropdown: Ops -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="opsDropdown" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Ops
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="opsDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('ui.observability') }}">Observability & Audit Logging</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.testing_agents') }}">Testing Agentic Systems</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.deployment') }}">Deployment Architecture</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.cost_optimization') }}">Cost Optimization</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.orders_grid') }}">Orders Grid</a></li>
+          </ul>
+        </li>
+
+        <!-- NEW Dropdown: Labs -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="labsDropdown" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            Labs
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="labsDropdown">
+            <li><a class="dropdown-item" href="{{ url_for('ui.lab_triage') }}">Lab: Triage → Intent + Entities</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.lab_replacement') }}">Lab: Replacement Workflow</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.lab_address_change') }}">Lab: Address Change (Policy Gate)</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('ui.lab_break_the_agent') }}">Lab: Break the Agent (Adversarial)</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- RIGHT (unchanged) -->
+      <ul class="navbar-nav ms-auto">
+        {% if user %}
+          <li class="nav-item d-flex align-items-center me-2">
+            <span class="navbar-text small text-light">
+              {{ user.name or user.preferred_username or "User" }}
+            </span>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('ui.logout') }}">Logout</a>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('ui.login', next=request.path) }}">Login</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <!-- HERO / "JUMBOTRON" (Bootstrap 5 Carousel) -->
+    <header class="hero-wrap bg-dark text-light border-bottom">
+      <div class="container py-4 py-lg-5">
+
+        <div class="row align-items-center g-4">
+          <div class="col-lg-5">
+            <div class="badge text-bg-primary mb-3">Working Model + Learning Model</div>
+            <h1 class="display-6 fw-bold mb-3">
+              Customer Support Triage + Action Agent
+            </h1>
+            <p class="lead mb-3 text-light-emphasis">
+              A practical reference implementation that turns unstructured customer requests into
+              <span class="fw-semibold">safe, auditable actions</span> across your order ecosystem.
+            </p>
+
+            <ul class="list-unstyled small mb-4">
+              <li class="mb-2">✅ Intent classification → structured workflow</li>
+              <li class="mb-2">✅ Tool calling (REST APIs / DB) with guardrails</li>
+              <li class="mb-2">✅ Keycloak-secured (OAuth2/OIDC) end-to-end</li>
+              <li class="mb-2">✅ Observability: correlation IDs + event logs</li>
+            </ul>
+
+            <div class="d-flex gap-2 flex-wrap">
+              <a class="btn btn-primary btn-lg" href="{{ url_for('ui.chat') }}">Open Chat</a>
+              <a class="btn btn-outline-light btn-lg" href="{{ url_for('ui.genai_concepts') }}">Learn the Concepts</a>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div id="heroCarousel" class="carousel slide hero-carousel shadow-lg rounded-4 overflow-hidden"
+                 data-bs-ride="carousel" data-bs-interval="6500">
+              <div class="carousel-indicators">
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"
+                        aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"
+                        aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"
+                        aria-label="Slide 3"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="3"
+                        aria-label="Slide 4"></button>
+              </div>
+
+              <div class="carousel-inner">
+                <!-- Slide 1 -->
+                <div class="carousel-item active">
+                  <div class="ratio ratio-16x9 bg-secondary hero-slide">
+                    <!-- Replace src with a real image later -->
+                  <img src="{{ url_for('static', filename='images/cs-ui-carousel-img-01.png') }}"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Customer Support Triage - Intent & Entities">
+                  </div>
+                  <div class="carousel-caption text-start">
+                    <h5 class="fw-bold">Triage: intent + entities</h5>
+                    <p class="small mb-0">“Order delivered to wrong address” → delivery issue + replacement.</p>
+                  </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="carousel-item">
+                  <div class="ratio ratio-16x9 bg-secondary hero-slide">
+                   <img src="{{ url_for('static', filename='images/cs-ui-carousel-img-02.png') }}"
+                       class="w-100 h-100 object-fit-cover"
+                       alt="Tool Calling and APIs">
+                  </div>
+                  <div class="carousel-caption text-start">
+                    <h5 class="fw-bold">Tools: APIs + DB</h5>
+                    <p class="small mb-0">Fetch order facts, tracking, address, and availability.</p>
+                  </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="carousel-item">
+                  <div class="ratio ratio-16x9 bg-secondary hero-slide">
+                   <img src="{{ url_for('static', filename='images/cs-ui-carousel-img-03.png') }}"
+                           class="w-100 h-100 object-fit-cover"
+                           alt="Guardrails and Policy Checks - Human Approval Gate - Audit Logging">
+                  </div>
+                  <div class="carousel-caption text-start">
+                    <h5 class="fw-bold">Guardrails + policy</h5>
+                    <p class="small mb-0">No refund / overnight upgrade unless allowed by policy.</p>
+                  </div>
+                </div>
+
+                <!-- Slide 4 -->
+                <div class="carousel-item">
+                  <div class="ratio ratio-16x9 bg-secondary hero-slide">
+                   <img src="{{ url_for('static', filename='images/cs-ui-carousel-img-04.png') }}"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="End-to-End Agentic Workflow - Triage, Policy, Approval, Ticketing">
+                  </div>
+                  <div class="carousel-caption text-start">
+                    <h5 class="fw-bold">Auditability</h5>
+                    <p class="small mb-0">Ticket created, actions recorded, correlation IDs everywhere.</p>
+                  </div>
+                </div>
+              </div>
+
+              <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+
+            <div class="mt-2 small text-light-emphasis">
+              Tip: Replace the placeholder images with your own diagrams/screenshots later (architecture, flow, logs).
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <main class="container py-4">
+
+      <!-- WHAT THIS APP IS ABOUT (CARDS) -->
+      <section class="mb-5">
+        <div class="d-flex align-items-end justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h2 class="h4 fw-bold mb-1">What this app is all about</h2>
+            <p class="text-secondary mb-0">
+              Learn the concepts, then see them running for real: secured, tool-driven, policy-governed.
+            </p>
+          </div>
+          <div class="small text-secondary">
+            Design goal: <span class="fw-semibold">reference implementation</span> + <span class="fw-semibold">training lab</span>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <!-- 1. Gen AI -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">1) Generative AI</h3>
+                  <span class="badge text-bg-light">Concept</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Turns natural language into structured outputs</li>
+                  <li>Summarizes, extracts entities, drafts responses</li>
+                  <li>Works best with grounding + policies</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. AI Agents -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">2) AI Agents</h3>
+                  <span class="badge text-bg-light">Behavior</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Plans steps to solve a user goal</li>
+                  <li>Uses tools (APIs/DB) to fetch facts</li>
+                  <li>Asks clarifying questions when needed</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Agentic AI -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">3) Agentic AI</h3>
+                  <span class="badge text-bg-warning">Execution</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Multi-step workflows with state + memory</li>
+                  <li>Guardrails for safe actions (policy checks)</li>
+                  <li>Auditable outcomes (tickets + logs)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. LangChain -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">4) LangChain</h3>
+                  <span class="badge text-bg-info">Framework</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Prompting + structured outputs</li>
+                  <li>Tool calling patterns</li>
+                  <li>RAG (optional) for policies + knowledge</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. LangGraph -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">5) LangGraph</h3>
+                  <span class="badge text-bg-info">Orchestration</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Deterministic workflow graphs</li>
+                  <li>Retries, branching, state transitions</li>
+                  <li>Human-in-the-loop checkpoints</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Keycloak -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">6) Keycloak</h3>
+                  <span class="badge text-bg-success">Security</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>OAuth2/OIDC authentication</li>
+                  <li>Scopes/roles for action authorization</li>
+                  <li>Token-based service-to-service security</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. MySQL -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">7) MySQL 8 DB</h3>
+                  <span class="badge text-bg-secondary">Data</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Orders, addresses, shipments, tickets</li>
+                  <li>Seed data for repeatable demos</li>
+                  <li>Reliable source of truth for workflows</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. REST API App -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-primary">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">8) Orders REST API App</h3>
+                  <span class="badge text-bg-primary">Service</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>CRUD + status + address updates</li>
+                  <li>Replacement + cancellation endpoints</li>
+                  <li>Protected as Resource Server</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 9. Workflow App -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-warning">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">9) Workflow App (LangGraph)</h3>
+                  <span class="badge text-bg-warning">Orchestrator</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Triage + plan + execute actions</li>
+                  <li>Policy checks + approvals</li>
+                  <li>Protected as Resource Server</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10. UI App -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-success">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h3 class="h6 fw-bold mb-0">10) UI App (Chat + Learning)</h3>
+                  <span class="badge text-bg-success">Experience</span>
+                </div>
+                <ul class="small mb-0">
+                  <li>Human-friendly chat + guided flows</li>
+                  <li>Concept pages (LangChain/LangGraph)</li>
+                  <li>Login/logout + user context</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENTERPRISE INTEGRATION -->
+      <section class="mb-4">
+        <div class="card shadow-sm">
+          <div class="card-body p-4">
+            <div class="row g-4 align-items-start">
+              <div class="col-lg-5">
+                <h2 class="h4 fw-bold mb-2">How Agentic AI connects to the enterprise</h2>
+                <p class="text-secondary mb-0">
+                  This app is designed to mirror real enterprise patterns: identity, APIs, data, workflows,
+                  observability, and governance.
+                </p>
+              </div>
+
+              <div class="col-lg-7">
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                      <div class="fw-semibold mb-1">Identity & Access</div>
+                      <ul class="small mb-0">
+                        <li>Keycloak as IdP (OIDC)</li>
+                        <li>Scopes/roles per action (replace, cancel, refund)</li>
+                        <li>Service-to-service tokens for APIs</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                      <div class="fw-semibold mb-1">Systems of Record</div>
+                      <ul class="small mb-0">
+                        <li>Orders / shipping / inventory services</li>
+                        <li>MySQL as demo store (mirrors production SoR)</li>
+                        <li>Optional: CRM / ERP / WMS integrations</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                      <div class="fw-semibold mb-1">Operations & Governance</div>
+                      <ul class="small mb-0">
+                        <li>Correlation IDs across hops</li>
+                        <li>Audit logs + ticketing trail</li>
+                        <li>Policy rules to prevent unsafe actions</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <div class="border rounded-3 p-3 h-100">
+                      <div class="fw-semibold mb-1">Human-in-the-loop</div>
+                      <ul class="small mb-0">
+                        <li>Clarifying question when required</li>
+                        <li>Approval gates for high-risk actions</li>
+                        <li>Customer-ready responses every time</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="small text-secondary">
+                  <span class="fw-semibold">Learning Model:</span> understand the concepts and patterns. &nbsp;|&nbsp;
+                  <span class="fw-semibold">Working Model:</span> run real flows end-to-end, secured by Keycloak, backed by MySQL, orchestrated by LangGraph.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- YOUR EXISTING PAGE CONTENT -->
+      {% block content %}{% endblock %}
+       </main>
+
+    <!-- FOOTER -->
+    <footer class="footer mt-auto py-4 bg-dark text-light border-top">
+      <div class="container">
+        <div class="row gy-4 align-items-start">
+
+          <!-- About -->
+          <div class="col-12 col-md-4">
+            <h6 class="fw-bold">Customer Support Agentic AI</h6>
+            <p class="small text-light-emphasis mb-0">
+              A working + learning reference implementation demonstrating
+              Generative AI, Agentic AI workflows, secure tool calling,
+              and enterprise-grade integration patterns.
+            </p>
+          </div>
+
+          <!-- Tech Stack -->
+          <div class="col-6 col-md-3">
+            <h6 class="fw-bold">Technology Stack</h6>
+            <ul class="list-unstyled small mb-0">
+              <li>LangChain</li>
+              <li>LangGraph</li>
+              <li>Flask (UI + APIs)</li>
+              <li>MySQL 8</li>
+              <li>Keycloak (OIDC)</li>
+            </ul>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="col-6 col-md-3">
+            <h6 class="fw-bold">Quick Links</h6>
+            <ul class="list-unstyled small mb-0">
+              <li><a href="{{ url_for('ui.home') }}" class="text-decoration-none text-light">Home</a></li>
+              <li><a href="{{ url_for('ui.chat') }}" class="text-decoration-none text-light">Chat</a></li>
+              <li><a href="{{ url_for('ui.langchain') }}" class="text-decoration-none text-light">LangChain</a></li>
+              <li><a href="{{ url_for('ui.langgraph') }}" class="text-decoration-none text-light">LangGraph</a></li>
+            </ul>
+          </div>
+
+          <!-- Author -->
+          <div class="col-12 col-md-2">
+            <h6 class="fw-bold">Author</h6>
+            <p class="small mb-1">Binit Datta</p>
+            <a href="https://www.linkedin.com/in/binitdatta/"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="text-decoration-none text-info small">
+              LinkedIn Profile
+            </a>
+          </div>
+
+        </div>
+
+        <hr class="border-secondary my-4">
+
+        <div class="text-center small text-light-emphasis">
+          © {{ current_year or 2026 }} Customer Support Agentic AI Demo.
+          Built as a reference implementation for enterprise AI systems.
+        </div>
+      </div>
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

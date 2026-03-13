@@ -1,0 +1,93 @@
+/* Hero wrapper styling */
+.hero-wrap {
+  background: radial-gradient(1200px 500px at 20% 10%, rgba(13,110,253,.25), transparent 60%),
+              radial-gradient(900px 400px at 80% 0%, rgba(25,135,84,.18), transparent 55%),
+              #111;
+}
+
+.hero-carousel .carousel-caption {
+  background: rgba(0,0,0,0.45);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.hero-carousel .carousel-caption h5,
+.hero-carousel .carousel-caption p {
+  text-shadow: 0 1px 8px rgba(0,0,0,.55);
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
+
+.hero-wrap .lead {
+  color: rgba(255,255,255,0.85);
+}
+
+.hero-carousel .ratio {
+  min-height: 420px;
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
+
+.object-fit-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-carousel .ratio {
+  min-height: 420px;
+}
+
+@media (min-width: 1200px) {
+  .hero-carousel .ratio {
+    min-height: 520px;
+  }
+}
+
+.hero-carousel .carousel-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.2),
+    rgba(0,0,0,0.4)
+  );
+  z-index: 1;
+}
+
+.hero-carousel .carousel-caption {
+  position: relative;
+  z-index: 2;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer h6 {
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+#langgraph .card {
+  border-radius: 1rem;
+}
+#langgraph pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+#langgraph .nav-pills .nav-link {
+  border-radius: 999px;
+}
+
+
+.hero-wrap {
+  background: radial-gradient(1200px 500px at 20% 10%, rgba(13,110,253,.25), transparent 60%),
+              radial-gradient(900px 400px at 80% 0%, rgba(25,135,84,.18), transparent 55%),
+              #111;
+}

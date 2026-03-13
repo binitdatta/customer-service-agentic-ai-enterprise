@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <!-- Header -->
+  <div class="text-center mb-5">
+    <h1 class="display-5 fw-bold">Human-in-the-Loop (HITL)</h1>
+    <p class="lead text-muted">
+      Safe, policy-driven AI systems that escalate decisions to humans when confidence,
+      compliance, or business rules require intervention.
+    </p>
+  </div>
+
+  <!-- Why HITL Matters -->
+  <section class="mb-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h2 class="h4 mb-3">Why Human-in-the-Loop Matters</h2>
+        <p>
+          In enterprise-grade Agentic AI systems, full autonomy is rarely acceptable.
+          Critical actions — refunds, overnight shipping, account changes, policy overrides —
+          must pass through a controlled human approval layer.
+        </p>
+        <ul>
+          <li>Prevents policy violations</li>
+          <li>Reduces hallucinated actions</li>
+          <li>Improves compliance & auditability</li>
+          <li>Builds customer trust</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- HITL in Customer Support Triage -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4">HITL in Customer Support Triage + Action Agent</h2>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Autonomous Steps</h5>
+            <ul class="mb-0">
+              <li>Classify intent</li>
+              <li>Fetch order details</li>
+              <li>Check tracking status</li>
+              <li>Validate address</li>
+              <li>Evaluate shipping policy</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Human Escalation Triggers</h5>
+            <ul class="mb-0">
+              <li>Replacement cost exceeds threshold</li>
+              <li>Fraud risk score high</li>
+              <li>Policy exception required</li>
+              <li>Customer disputes delivery proof</li>
+              <li>Inventory shortage</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flow Diagram -->
+ <section class="mb-5">
+  <h2 class="h4 mb-3">Decision Flow with Human Checkpoint</h2>
+
+  <figure class="mb-0">
+    <div class="ratio ratio-16x9 rounded-3 border overflow-hidden bg-body-tertiary">
+      <img
+        src="{{ url_for('static', filename='images/htl.png') }}"
+        class="w-100 h-100"
+        style="object-fit: contain;"
+        alt="Human-in-the-loop decision flow: Classify → Fetch → Policy → Confidence Check → Human Approval (if needed) → Act → Respond"
+        loading="lazy"
+      />
+    </div>
+    <figcaption class="small text-muted mt-2">
+      Escalation occurs only when risk, ambiguity, or policy boundaries are crossed.
+    </figcaption>
+  </figure>
+</section>
+
+  <!-- Technical Implementation -->
+  <section class="mb-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h2 class="h4 mb-3">Technical Implementation (LangGraph Pattern)</h2>
+
+<pre class="bg-dark text-light p-3 rounded small"><code>
+State Graph Nodes:
+
+1. classify_intent
+2. fetch_order_data
+3. evaluate_policy
+4. check_confidence
+5. human_review (conditional edge)
+6. execute_action
+7. generate_response
+
+Conditional Edge Example:
+if confidence < 0.85 or policy_violation:
+    route_to("human_review")
+else:
+    route_to("execute_action")
+</code></pre>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Governance & Audit -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4">Governance & Audit Controls</h2>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h6 class="fw-bold">Audit Logging</h6>
+            <p class="small text-muted mb-0">
+              Log every escalation decision, reviewer ID, timestamp, and reason.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h6 class="fw-bold">Role-Based Access</h6>
+            <p class="small text-muted mb-0">
+              Only authorized supervisors can approve refunds or overrides.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body">
+            <h6 class="fw-bold">Replay & Traceability</h6>
+            <p class="small text-muted mb-0">
+              Full conversation and state replay for compliance or dispute handling.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Enterprise Insight -->
+  <section>
+    <div class="alert alert-info border-0 shadow-sm">
+      <strong>Enterprise Insight:</strong>
+      Human-in-the-Loop is not a fallback. It is a designed control boundary.
+      Mature AI systems treat human escalation as a first-class architectural component,
+      not as an afterthought.
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

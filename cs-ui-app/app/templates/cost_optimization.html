@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <!-- Header -->
+  <header class="mb-5">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+      <div>
+        <h1 class="display-6 fw-semibold mb-2">Cost Optimization</h1>
+        <p class="text-muted mb-0">
+          Cost is a design constraint. For an agentic support system, optimization spans LLM usage,
+          API efficiency, database workload, observability volume, and identity/security controls.
+        </p>
+      </div>
+
+      <div class="text-end">
+        <span class="badge text-bg-primary me-2">CS-Triage</span>
+        <span class="badge text-bg-secondary me-2">LLM + Tool Calling</span>
+        <span class="badge text-bg-success">FinOps</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Executive Summary -->
+  <section class="mb-5">
+    <div class="alert alert-primary border-0 shadow-sm mb-0">
+      <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+        <div>
+          <strong>Rule of Thumb:</strong> Reduce repeated work (tokens, retries, queries, logs) before you reduce capacity.
+          Most savings come from fewer model calls, fewer tool calls, and smaller telemetry volume.
+        </div>
+        <span class="badge text-bg-light text-primary border">Cost → Quality → Safety</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cost Drivers -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">1️⃣ Primary Cost Drivers</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">LLM Tokens</h6>
+            <p class="small text-muted mb-0">
+              System prompts, conversation history, tool outputs, and retries are the biggest drivers.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">Tool Calls</h6>
+            <p class="small text-muted mb-0">
+              Each API call has infra + latency cost. Excessive fetching is common in early agent builds.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">Data + DB</h6>
+            <p class="small text-muted mb-0">
+              N+1 queries, chatty patterns, and large payloads inflate compute and storage.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">Observability</h6>
+            <p class="small text-muted mb-0">
+              Logs, metrics, traces, and security events can exceed compute spend if not governed.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Quick Wins -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">2️⃣ High-ROI Quick Wins</h2>
+
+    <div class="row g-4">
+
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">LLM Usage Controls</h5>
+            <ul class="small mb-0">
+              <li><strong>Summarize memory</strong> before context grows (rolling conversation summaries).</li>
+              <li><strong>Strict structured output</strong> (Pydantic / JSON schema) → fewer retries.</li>
+              <li><strong>Two-stage reasoning:</strong> cheap classifier → expensive reasoning only when needed.</li>
+              <li><strong>Cache deterministic steps:</strong> policy decisions, tool schemas, reference text.</li>
+              <li><strong>Limit tool output size</strong> returned to the LLM (return only required fields).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Tool-Calling Controls</h5>
+            <ul class="small mb-0">
+              <li><strong>Batch reads:</strong> one Orders API call returns order + shipment + address snapshot.</li>
+              <li><strong>Idempotency keys</strong> for replacement/ticket creation → avoid duplicate costs.</li>
+              <li><strong>Retry budget</strong>: bounded retries with exponential backoff and jitter.</li>
+              <li><strong>Read-through caches</strong> for common lookups (inventory availability, SLA policy).</li>
+              <li><strong>Prefer server-side joins</strong> over multi-hop client orchestration.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Policy + Security also saves money -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">3️⃣ Policy & Security as Cost Controls</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <p class="text-muted">
+          Strong authorization reduces expensive “undo” work (refund reversals, duplicate replacements, manual escalations).
+          Your Keycloak realm already uses scoped roles like <code>order_read</code>, <code>order_write</code>,
+          <code>ticket_write</code>, and <code>replacement_create</code>, plus short-lived access tokens (300 seconds),
+          which helps minimize blast radius and replay risk. :contentReference[oaicite:1]{index=1}
+        </p>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="border rounded-3 p-3 h-100">
+              <div class="fw-semibold mb-1">Least Privilege</div>
+              <div class="small text-muted">
+                Only Workflow service accounts get high-cost actions like replacement creation.
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-3 p-3 h-100">
+              <div class="fw-semibold mb-1">Short Token Lifetimes</div>
+              <div class="small text-muted">
+                Lower fraud risk reduces downstream operational and customer-support costs.
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-3 p-3 h-100">
+              <div class="fw-semibold mb-1">Guardrails</div>
+              <div class="small text-muted">
+                Fewer “policy-breaking” actions means fewer escalations and rework.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Observability Cost Governance -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">4️⃣ Observability Cost Governance</h2>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Telemetry Strategy</h5>
+            <p class="text-muted small mb-2">
+              Treat telemetry as a metered product. Use sampling and retention tiers.
+            </p>
+            <ul class="small mb-0">
+              <li><strong>Logs:</strong> keep structured logs; redact PII; cap payload sizes; enforce log levels by env.</li>
+              <li><strong>Metrics:</strong> low-cardinality dimensions; avoid exploding label sets (tenantId/userId).</li>
+              <li><strong>Traces:</strong> head-based sampling + always-sample on errors and policy denies.</li>
+              <li><strong>Security events:</strong> retain longer than traces; keep them compact and high-signal.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Retention Tiers</h5>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Signal</th>
+                    <th>Default</th>
+                    <th>Hot / Cold</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Metrics</td>
+                    <td>30–90 days</td>
+                    <td>Hot longer</td>
+                  </tr>
+                  <tr>
+                    <td>Logs</td>
+                    <td>14–30 days</td>
+                    <td>Archive sampled</td>
+                  </tr>
+                  <tr>
+                    <td>Traces</td>
+                    <td>3–7 days</td>
+                    <td>Error traces longer</td>
+                  </tr>
+                  <tr>
+                    <td>Security Events</td>
+                    <td>90–365 days</td>
+                    <td>Cold storage</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="small text-muted mt-2">
+              (Tune to compliance and incident-response needs.)
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scaling & Deployment -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">5️⃣ Scaling and Deployment Cost Controls</h2>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Right-Sizing + Autoscaling</h6>
+            <ul class="small mb-0">
+              <li>Set CPU/memory requests/limits per service (UI, Orders, Workflow).</li>
+              <li>Autoscale on <strong>RPS</strong> + <strong>p95 latency</strong>, not CPU alone.</li>
+              <li>Separate “burst” workloads (LLM-heavy) from “steady” workloads (API/DB).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Database Cost Hygiene</h6>
+            <ul class="small mb-0">
+              <li>Add the right indexes for order lookup and ticket correlation.</li>
+              <li>Use read replicas for heavy read paths (order status checks).</li>
+              <li>Archive completed workflows to cheaper storage.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Practical Checklist -->
+  <section>
+    <h2 class="h4 mb-3">✅ Cost Optimization Checklist</h2>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">Conversation summarization + context window cap</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">Structured output enforced (schema validation)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">Idempotency keys for all state-changing tool calls</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">Batch reads and minimal tool payloads to LLM</label>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">Telemetry sampling + retention tiers defined</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">RBAC prevents expensive actions without entitlement</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">Autoscaling driven by latency + RPS, not CPU only</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">DB indexes + read replicas aligned with traffic patterns</label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="alert alert-warning border-0 mb-0">
+          <strong>Watch-out:</strong> The fastest way to blow budget is high-cardinality telemetry and “looping agents”
+          (repeated tool calls + repeated prompts). Put budgets and circuit breakers in the agent runtime.
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

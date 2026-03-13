@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="mt-4">
+    <h2 class="h5 fw-bold mb-2">Quick Start</h2>
+    <p class="text-secondary mb-3">Try a sample customer support scenario in Chat.</p>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-primary" href="{{ url_for('ui.chat') }}">Go to Chat</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('ui.genai_concepts') }}">Concepts</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('ui.langgraph') }}">LangGraph</a>
+      <a class="btn btn-outline-secondary" href="{{ url_for('ui.langchain') }}">LangChain</a>
+    </div>
+  </div>
+{% endblock %}

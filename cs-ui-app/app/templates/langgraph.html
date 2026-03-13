@@ -1,0 +1,676 @@
+{% extends "base.html" %}
+{% block content %}
+ <section id="langgraph" class="mb-5">
+  <!-- Header Row -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h2 class="h3 mb-1">LangGraph</h2>
+      <p class="text-muted mb-0">
+        A graph-based orchestration framework for building reliable, stateful, tool-using AI agents.
+      </p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-light btn-sm" href="#langgraph-faq">
+        <i class="bi bi-question-circle me-1"></i> FAQ
+      </a>
+
+      <button class="btn btn-primary btn-sm"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#lgStarter"
+              aria-controls="lgStarter">
+        <i class="bi bi-rocket-takeoff me-1"></i> Starter Checklist
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero Card -->
+  <div class="card shadow-sm border-0 overflow-hidden mb-4">
+    <div class="card-body p-4 p-lg-5">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <span class="badge text-bg-success mb-2">Agent Orchestration</span>
+          <h3 class="display-6 fw-semibold mb-3">
+            Build agentic workflows that are <span class="text-primary">stateful</span>,
+            <span class="text-primary">safe</span>, and <span class="text-primary">testable</span>.
+          </h3>
+
+          <p class="text-muted mb-4">
+            LangGraph lets you model your agent as a <strong>graph of nodes</strong> (LLM calls, tool calls, validations,
+            policy checks, human-in-the-loop steps) with explicit <strong>state</strong> and <strong>transitions</strong>.
+            This helps you ship production-grade agents that don’t go off the rails.
+          </p>
+
+          <div class="d-flex flex-wrap gap-2">
+            <a href="#lg-quickstart" class="btn btn-primary">
+              <i class="bi bi-play-circle me-1"></i> Quickstart Concepts
+            </a>
+            <a href="#lg-architecture" class="btn btn-outline-secondary">
+              <i class="bi bi-diagram-3 me-1"></i> Architecture
+            </a>
+            <a href="#lg-patterns" class="btn btn-outline-secondary">
+              <i class="bi bi-shield-check me-1"></i> Guardrails & Patterns
+            </a>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="p-3 rounded-3 bg-body-tertiary border">
+                <div class="fw-semibold"><i class="bi bi-node-plus me-1"></i> Nodes</div>
+                <div class="small text-muted">LLM, tools, validators, routers</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded-3 bg-body-tertiary border">
+                <div class="fw-semibold"><i class="bi bi-arrow-repeat me-1"></i> Edges</div>
+                <div class="small text-muted">deterministic + conditional transitions</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 rounded-3 bg-body-tertiary border">
+                <div class="fw-semibold"><i class="bi bi-database-check me-1"></i> State</div>
+                <div class="small text-muted">typed data across steps & retries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right-side: mini diagram -->
+        <div class="col-lg-5">
+          <div class="p-4 rounded-4 bg-body-tertiary border">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="fw-semibold">Typical Graph</div>
+              <span class="badge text-bg-primary">Triage → Act → Respond</span>
+            </div>
+
+            <div class="small text-muted mb-3">
+              Model your support agent as a deterministic workflow with safe tool execution.
+            </div>
+
+            <div class="d-grid gap-2">
+              <div class="p-3 rounded-3 bg-dark text-light">
+                <div class="fw-semibold"><i class="bi bi-chat-dots me-1"></i> Node: Classify Intent</div>
+                <div class="small opacity-75">Extract order_id, issue_type, requested_action</div>
+              </div>
+              <div class="text-center text-muted"><i class="bi bi-arrow-down"></i></div>
+              <div class="p-3 rounded-3 bg-dark text-light">
+                <div class="fw-semibold"><i class="bi bi-search me-1"></i> Node: Fetch Facts</div>
+                <div class="small opacity-75">Order status, tracking, inventory, policy</div>
+              </div>
+              <div class="text-center text-muted"><i class="bi bi-arrow-down"></i></div>
+              <div class="p-3 rounded-3 bg-dark text-light">
+                <div class="fw-semibold"><i class="bi bi-shield-lock me-1"></i> Node: Policy Gate</div>
+                <div class="small opacity-75">Allow/deny refund, replacement, overnight</div>
+              </div>
+              <div class="text-center text-muted"><i class="bi bi-arrow-down"></i></div>
+              <div class="p-3 rounded-3 bg-dark text-light">
+                <div class="fw-semibold"><i class="bi bi-check2-circle me-1"></i> Node: Execute Tools</div>
+                <div class="small opacity-75">Create replacement, open ticket, notify customer</div>
+              </div>
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0 small">
+              <i class="bi bi-lightbulb me-1"></i>
+              Use <strong>conditional edges</strong> to ask clarifying questions only when required.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-pills gap-2 mb-3" id="lgTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="lg-quickstart-tab" data-bs-toggle="tab" data-bs-target="#lg-quickstart"
+              type="button" role="tab" aria-controls="lg-quickstart" aria-selected="true">
+        <i class="bi bi-play-circle me-1"></i> Quickstart Concepts
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lg-architecture-tab" data-bs-toggle="tab" data-bs-target="#lg-architecture"
+              type="button" role="tab" aria-controls="lg-architecture" aria-selected="false">
+        <i class="bi bi-diagram-3 me-1"></i> Architecture
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lg-patterns-tab" data-bs-toggle="tab" data-bs-target="#lg-patterns"
+              type="button" role="tab" aria-controls="lg-patterns" aria-selected="false">
+        <i class="bi bi-shield-check me-1"></i> Guardrails & Patterns
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lg-usecases-tab" data-bs-toggle="tab" data-bs-target="#lg-usecases"
+              type="button" role="tab" aria-controls="lg-usecases" aria-selected="false">
+        <i class="bi bi-grid-3x3-gap me-1"></i> Use Cases
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lg-faq-tab" data-bs-toggle="tab" data-bs-target="#lg-faq"
+              type="button" role="tab" aria-controls="lg-faq" aria-selected="false">
+        <i class="bi bi-question-circle me-1"></i> FAQ
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="lgTabsContent">
+    <!-- Quickstart -->
+    <div class="tab-pane fade show active" id="lg-quickstart" role="tabpanel" aria-labelledby="lg-quickstart-tab">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h4 class="mb-2">What is LangGraph, in plain terms?</h4>
+              <p class="text-muted mb-3">
+                LangGraph is a <strong>state machine for LLM apps</strong>. You define:
+                <strong>state</strong> (what the agent knows), <strong>nodes</strong> (steps),
+                and <strong>edges</strong> (how to move between steps).
+              </p>
+
+              <div class="alert alert-warning small mb-3">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                A “chatbot” becomes a <strong>workflow</strong>: deterministic where it must be, flexible where it can be.
+              </div>
+
+              <h5 class="mb-2">Core primitives</h5>
+              <ul class="mb-0">
+                <li><strong>State</strong>: typed object holding order_id, customer, policy decisions, tool results</li>
+                <li><strong>Nodes</strong>: LLM steps, tool calls, validators, routers, human approvals</li>
+                <li><strong>Edges</strong>: unconditional transitions or conditional routing (if/else)</li>
+                <li><strong>Memory</strong>: persist state across turns or sessions when needed</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h4 class="mb-3">Why teams adopt LangGraph</h4>
+
+              <div class="d-flex gap-3 mb-3">
+                <div class="rounded-3 p-2 bg-body-tertiary border">
+                  <i class="bi bi-check2-circle"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold">Predictable behavior</div>
+                  <div class="small text-muted">Explicit branching beats hidden prompt magic.</div>
+                </div>
+              </div>
+
+              <div class="d-flex gap-3 mb-3">
+                <div class="rounded-3 p-2 bg-body-tertiary border">
+                  <i class="bi bi-bug"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold">Debuggability</div>
+                  <div class="small text-muted">Inspect state at every node and replay runs.</div>
+                </div>
+              </div>
+
+              <div class="d-flex gap-3 mb-0">
+                <div class="rounded-3 p-2 bg-body-tertiary border">
+                  <i class="bi bi-shield-lock"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold">Safety guardrails</div>
+                  <div class="small text-muted">Policy gates, approvals, and tool constraints.</div>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <div class="small text-muted">
+                <strong>Best fit:</strong> multi-step flows like support triage, claims, onboarding,
+                approvals, and any “think → verify → act” automation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accordion: deeper dives -->
+      <div class="accordion mt-4" id="lgQuickAcc">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="lgq1h">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#lgq1"
+                    aria-expanded="true" aria-controls="lgq1">
+              How LangGraph differs from a simple agent loop
+            </button>
+          </h2>
+          <div id="lgq1" class="accordion-collapse collapse show" aria-labelledby="lgq1h" data-bs-parent="#lgQuickAcc">
+            <div class="accordion-body text-muted">
+              A simple agent loop repeatedly prompts the model and hopes it “does the right thing.”
+              LangGraph lets you explicitly model steps like:
+              <strong>classify → fetch → validate → act → confirm → respond</strong>, with deterministic routing and typed state.
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="lgq2h">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#lgq2"
+                    aria-expanded="false" aria-controls="lgq2">
+              Where it shines in your Order Support Triage + Action Agent
+            </button>
+          </h2>
+          <div id="lgq2" class="accordion-collapse collapse" aria-labelledby="lgq2h" data-bs-parent="#lgQuickAcc">
+            <div class="accordion-body text-muted">
+              You can enforce: “No refund or overnight upgrade unless policy permits,”
+              and route to a <strong>clarifying question</strong> node only when critical data is missing.
+              Tool calls happen behind a strict <strong>policy gate</strong> node.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture -->
+    <div class="tab-pane fade" id="lg-architecture" role="tabpanel" aria-labelledby="lg-architecture-tab">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <h4 class="mb-3">Reference Architecture</h4>
+              <ol class="text-muted mb-0">
+                <li><strong>UI</strong> (Flask/Bootstrap): chat + transcripts + run IDs</li>
+                <li><strong>LangGraph Orchestrator</strong>: graph definition + routing + state</li>
+                <li><strong>Tools Layer</strong>: Orders API, Inventory API, Ticketing, Notifications</li>
+                <li><strong>Policy Engine</strong>: shipping/refund rules, entitlements, limits</li>
+                <li><strong>Observability</strong>: correlation-id, structured logs, traces</li>
+                <li><strong>Persistence</strong>: run store, state snapshots, audit trail</li>
+              </ol>
+              <hr class="my-3">
+              <div class="alert alert-secondary small mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Treat every tool call as a <strong>transactional action</strong> with an audit record.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <h4 class="mb-3">State model (example)</h4>
+              <pre class="bg-body-tertiary border rounded-3 p-3 mb-0"><code>{
+  "message": "...customer request...",
+  "order_id": "88421",
+  "issue_type": "DELIVERED_WRONG_ADDRESS",
+  "requested_action": "REPLACEMENT_OVERNIGHT",
+  "facts": {
+    "order_status": "DELIVERED",
+    "delivery_address": "...",
+    "tracking": "...",
+    "inventory": { "sku": "ABC", "available": true }
+  },
+  "policy": {
+    "replacement_allowed": true,
+    "overnight_allowed": false,
+    "reason": "overnight requires manager approval"
+  },
+  "actions_taken": [
+    "replacement_created",
+    "ticket_opened"
+  ],
+  "next_steps": [
+    "confirm shipping address",
+    "standard shipping ETA 2-3 days"
+  ]
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guardrails & Patterns -->
+    <div class="tab-pane fade" id="lg-patterns" role="tabpanel" aria-labelledby="lg-patterns-tab">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <h4 class="mb-3">Guardrail patterns</h4>
+
+              <div class="list-group">
+                <div class="list-group-item border-0 px-0">
+                  <div class="fw-semibold"><i class="bi bi-shield-lock me-1"></i> Policy Gate Node</div>
+                  <div class="text-muted small">
+                    Centralize entitlement checks before any state-changing tool call (refund, replace, expedite).
+                  </div>
+                </div>
+                <div class="list-group-item border-0 px-0">
+                  <div class="fw-semibold"><i class="bi bi-person-check me-1"></i> Human-in-the-loop Approval</div>
+                  <div class="text-muted small">
+                    Route “high impact” actions to a manager approval node (overnight shipping, refunds above threshold).
+                  </div>
+                </div>
+                <div class="list-group-item border-0 px-0">
+                  <div class="fw-semibold"><i class="bi bi-journal-check me-1"></i> Idempotent Tools</div>
+                  <div class="text-muted small">
+                    Use idempotency keys per run_id to avoid double replacement or double refund.
+                  </div>
+                </div>
+                <div class="list-group-item border-0 px-0">
+                  <div class="fw-semibold"><i class="bi bi-bounding-box me-1"></i> Typed State + Validation</div>
+                  <div class="text-muted small">
+                    Validate extracted fields (order_id format, address completeness) before hitting downstream APIs.
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-3">
+
+              <div class="alert alert-danger small mb-0">
+                <i class="bi bi-exclamation-octagon me-1"></i>
+                Never let the model directly “decide” refunds/expedite. Make it propose, then enforce via policy.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <h4 class="mb-3">Minimal pseudo-flow</h4>
+              <pre class="bg-body-tertiary border rounded-3 p-3 mb-0"><code>START
+  ↓
+CLASSIFY_INTENT
+  ↓
+FETCH_FACTS (Orders, Tracking, Inventory)
+  ↓
+NEED_CLARIFICATION? ── yes → ASK_QUESTION → WAIT_FOR_USER
+  ↓ no
+POLICY_GATE
+  ↓
+APPROVAL_REQUIRED? ── yes → MANAGER_APPROVAL → (approved/denied)
+  ↓
+EXECUTE_ACTIONS (replace, ticket)
+  ↓
+CUSTOMER_RESPONSE
+END</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div class="tab-pane fade" id="lg-usecases" role="tabpanel" aria-labelledby="lg-usecases-tab">
+      <!-- Filter controls -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-secondary btn-sm lg-filter active" data-filter="all">
+            All
+          </button>
+          <button class="btn btn-outline-secondary btn-sm lg-filter" data-filter="support">
+            Support
+          </button>
+          <button class="btn btn-outline-secondary btn-sm lg-filter" data-filter="ops">
+            Ops
+          </button>
+          <button class="btn btn-outline-secondary btn-sm lg-filter" data-filter="security">
+            Security
+          </button>
+        </div>
+
+        <div class="input-group input-group-sm" style="max-width: 360px;">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input id="lgSearch" type="text" class="form-control" placeholder="Search use cases...">
+        </div>
+      </div>
+
+      <div class="row g-3" id="lgUsecaseGrid">
+        <div class="col-md-6 col-lg-4 lg-card" data-tags="support ops" data-title="Order issue triage + replacement">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+              <span class="badge text-bg-primary mb-2">Support</span>
+              <h5 class="card-title">Order Triage + Action Agent</h5>
+              <p class="card-text text-muted small">
+                Classify issue, fetch facts, apply policy, create replacement, open ticket, respond.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 lg-card" data-tags="ops" data-title="Return authorization workflow">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+              <span class="badge text-bg-success mb-2">Ops</span>
+              <h5 class="card-title">RMA / Returns Orchestration</h5>
+              <p class="card-text text-muted small">
+                Validate eligibility, generate label, update ERP, notify customer, track exceptions.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 lg-card" data-tags="security ops" data-title="Access request approvals">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+              <span class="badge text-bg-warning mb-2">Security</span>
+              <h5 class="card-title">Access Request + Approval</h5>
+              <p class="card-text text-muted small">
+                Collect request, check SoD policy, route to approvers, provision, audit.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 lg-card" data-tags="support" data-title="Knowledge base guided resolution">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+              <span class="badge text-bg-primary mb-2">Support</span>
+              <h5 class="card-title">Guided Troubleshooting</h5>
+              <p class="card-text text-muted small">
+                Diagnose with structured questions and tool lookups; end with customer-ready steps.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 lg-card" data-tags="ops security" data-title="Audit & compliance reporting assistant">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+              <span class="badge text-bg-dark mb-2">Ops/Security</span>
+              <h5 class="card-title">Audit Narrative Builder</h5>
+              <p class="card-text text-muted small">
+                Pull evidence, summarize controls, produce auditor-friendly reports with trace IDs.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 lg-card" data-tags="support" data-title="Billing dispute investigation">
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+              <span class="badge text-bg-primary mb-2">Support</span>
+              <h5 class="card-title">Billing Dispute Investigation</h5>
+              <p class="card-text text-muted small">
+                Fetch invoices, payment events, policy; propose resolution; route high-risk to humans.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="lgNoResults" class="alert alert-secondary mt-3 d-none">
+        <i class="bi bi-info-circle me-1"></i> No matching use cases found.
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="tab-pane fade" id="lg-faq" role="tabpanel" aria-labelledby="lg-faq-tab">
+      <div class="row g-4" id="langgraph-faq">
+        <div class="col-lg-8">
+          <div class="accordion" id="lgFaqAcc">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="lgf1h">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#lgf1"
+                        aria-expanded="true" aria-controls="lgf1">
+                  Do I need LangGraph if I already have LangChain?
+                </button>
+              </h2>
+              <div id="lgf1" class="accordion-collapse collapse show" aria-labelledby="lgf1h" data-bs-parent="#lgFaqAcc">
+                <div class="accordion-body text-muted">
+                  If your flow is multi-step and must be reliable, LangGraph gives you explicit state transitions,
+                  better observability, and safer tool execution. For simple “single prompt → single tool” flows,
+                  LangChain alone is often enough.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="lgf2h">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#lgf2"
+                        aria-expanded="false" aria-controls="lgf2">
+                  What’s the biggest production advantage?
+                </button>
+              </h2>
+              <div id="lgf2" class="accordion-collapse collapse" aria-labelledby="lgf2h" data-bs-parent="#lgFaqAcc">
+                <div class="accordion-body text-muted">
+                  Deterministic routing + typed state. You can enforce policies in code, log each node, and replay runs.
+                  That’s how you keep agents from becoming unpredictable.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="lgf3h">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#lgf3"
+                        aria-expanded="false" aria-controls="lgf3">
+                  How do I prevent “tool abuse”?
+                </button>
+              </h2>
+              <div id="lgf3" class="accordion-collapse collapse" aria-labelledby="lgf3h" data-bs-parent="#lgFaqAcc">
+                <div class="accordion-body text-muted">
+                  Use a policy gate node + allowlist tools + validate inputs + require approvals for high-impact actions,
+                  and make tools idempotent with run-level keys.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+              <h5 class="mb-2">Practical next step</h5>
+              <p class="text-muted small mb-3">
+                For your “Order Support Triage + Action Agent,” start by drawing 6 nodes:
+              </p>
+              <ul class="small text-muted mb-0">
+                <li>Classify</li>
+                <li>Fetch order facts</li>
+                <li>Fetch inventory</li>
+                <li>Policy gate</li>
+                <li>Execute actions</li>
+                <li>Customer response</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offcanvas: Starter Checklist -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="lgStarter" aria-labelledby="lgStarterLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="lgStarterLabel">
+        <i class="bi bi-rocket-takeoff me-1"></i> LangGraph Starter Checklist
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body">
+      <p class="text-muted small">
+        Use this as a build plan for a production-ready agent (especially tool-using support automation).
+      </p>
+
+      <div class="list-group">
+        <div class="list-group-item">
+          <div class="fw-semibold">1) Define your state schema</div>
+          <div class="small text-muted">order_id, intent, facts, policy decisions, actions_taken</div>
+        </div>
+        <div class="list-group-item">
+          <div class="fw-semibold">2) Enumerate nodes</div>
+          <div class="small text-muted">classify → fetch → validate → policy → act → respond</div>
+        </div>
+        <div class="list-group-item">
+          <div class="fw-semibold">3) Conditional edges</div>
+          <div class="small text-muted">missing data → ask; high-risk → approval; else → execute</div>
+        </div>
+        <div class="list-group-item">
+          <div class="fw-semibold">4) Tool safety</div>
+          <div class="small text-muted">allowlist, input validation, idempotency keys, retries</div>
+        </div>
+        <div class="list-group-item">
+          <div class="fw-semibold">5) Observability</div>
+          <div class="small text-muted">correlation-id, node logs, state snapshots, replay</div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="alert alert-primary small mb-0">
+        <i class="bi bi-stars me-1"></i>
+        Want this wired into your Flask UI (App3) with your existing Orders API tools?
+        I can generate the exact Flask route + template include + JS wiring next.
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // --- LangGraph Use Case Filtering (Bootstrap-friendly) ---
+  (function () {
+    const filters = Array.from(document.querySelectorAll(".lg-filter"));
+    const cards = Array.from(document.querySelectorAll(".lg-card"));
+    const search = document.getElementById("lgSearch");
+    const noResults = document.getElementById("lgNoResults");
+
+    let activeTag = "all";
+
+    function normalize(s) {
+      return (s || "").toLowerCase().trim();
+    }
+
+    function apply() {
+      const q = normalize(search?.value);
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const tags = normalize(card.getAttribute("data-tags"));
+        const title = normalize(card.getAttribute("data-title"));
+
+        const matchesTag = (activeTag === "all") || tags.includes(activeTag);
+        const matchesSearch = !q || title.includes(q) || tags.includes(q);
+
+        const show = matchesTag && matchesSearch;
+        card.classList.toggle("d-none", !show);
+        if (show) visibleCount++;
+      });
+
+      if (noResults) noResults.classList.toggle("d-none", visibleCount !== 0);
+    }
+
+    filters.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        filters.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeTag = btn.getAttribute("data-filter") || "all";
+        apply();
+      });
+    });
+
+    if (search) search.addEventListener("input", apply);
+
+    apply();
+  })();
+</script>
+
+{% endblock %}

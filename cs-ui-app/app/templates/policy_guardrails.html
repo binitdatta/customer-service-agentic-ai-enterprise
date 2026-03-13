@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="container py-5">
+
+  <!-- Header -->
+  <div class="text-center mb-5">
+    <h1 class="fw-bold">Policy & Guardrails Architecture</h1>
+    <p class="text-muted">
+      Safety, compliance, and deterministic control for Agentic AI customer support workflows.
+    </p>
+  </div>
+
+  <!-- Overview Card -->
+  <div class="card shadow-sm border-0 mb-5">
+    <div class="card-body">
+      <h5 class="fw-semibold mb-3">Why Guardrails Matter</h5>
+      <p>
+        In the Customer Support Triage + Action Agent, the model can reason and propose actions.
+        However, <strong>business policy must be authoritative</strong>.
+      </p>
+
+      <ul>
+        <li>Prevent unauthorized refunds</li>
+        <li>Prevent policy-violating shipping upgrades</li>
+        <li>Enforce SLA and eligibility rules</li>
+        <li>Ensure auditability & compliance</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Flow Diagram -->
+  <div class="mb-5">
+    <h4 class="mb-3">State Machine with Policy Gate</h4>
+
+    <div class="ratio ratio-16x9 rounded-3 border shadow-sm">
+      <img src="{{ url_for('static', filename='images/policy-guardrails-flow.png') }}"
+           class="img-fluid rounded-3"
+           alt="Policy Guardrails State Machine Flow">
+    </div>
+
+    <div class="small text-muted mt-2">
+      Classify → Fetch → <strong>Policy Check</strong> → Clarify → Act → Respond
+    </div>
+  </div>
+
+  <!-- Guardrail Layers -->
+  <div class="row g-4 mb-5">
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-semibold">1️⃣ Intent Guardrails</h5>
+          <ul class="small">
+            <li>Intent classification confidence threshold</li>
+            <li>Ambiguity detection</li>
+            <li>Disallowed categories filtering</li>
+            <li>Injection & jailbreak protection</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-semibold">2️⃣ Policy Engine</h5>
+          <ul class="small">
+            <li>Replacement eligibility window</li>
+            <li>Shipping upgrade rules</li>
+            <li>Inventory availability validation</li>
+            <li>Refund thresholds</li>
+            <li>Fraud scoring integration</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-semibold">3️⃣ Execution Guardrails</h5>
+          <ul class="small">
+            <li>Idempotency enforcement</li>
+            <li>Action approval workflow</li>
+            <li>Rate limiting</li>
+            <li>Transactional integrity</li>
+            <li>Audit logging</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Policy Decision Example -->
+  <div class="card shadow-sm border-0 mb-5">
+    <div class="card-body">
+      <h5 class="fw-semibold mb-3">Example: Replacement Request</h5>
+
+<pre class="bg-dark text-light p-3 rounded small">
+User: "My order #88421 was delivered to the wrong address.
+       I want a replacement shipped overnight."
+
+Policy Evaluation:
+------------------------------------------
+Delivery confirmed?        YES
+Address mismatch verified? YES
+Within replacement window? YES
+Item in stock?             YES
+Overnight allowed by SLA?  CHECK CUSTOMER TIER
+
+Decision:
+Replacement Approved
+Shipping: Standard (Overnight not permitted for this tier)
+Support Ticket: Opened
+</pre>
+
+    </div>
+  </div>
+
+  <!-- Architecture Layers -->
+  <div class="row g-4 mb-5">
+
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-semibold">Application Layer</h5>
+          <ul class="small">
+            <li>LangGraph State Machine</li>
+            <li>Structured Tool Calling</li>
+            <li>Typed Action Contracts</li>
+            <li>Deterministic Step Transitions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-semibold">Infrastructure Layer</h5>
+          <ul class="small">
+            <li>API Gateway Validation</li>
+            <li>Keycloak Authentication</li>
+            <li>RBAC Authorization</li>
+            <li>Centralized Logging (ELK / GCP / Azure)</li>
+            <li>Immutable Audit Trail</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Key Principles -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h5 class="fw-semibold mb-3">Core Guardrail Principles</h5>
+
+      <div class="row">
+        <div class="col-md-3">
+          <div class="fw-semibold">Deterministic</div>
+          <div class="small text-muted">
+            Policy logic must never depend solely on LLM reasoning.
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-semibold">Auditable</div>
+          <div class="small text-muted">
+            Every decision produces a structured audit record.
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-semibold">Idempotent</div>
+          <div class="small text-muted">
+            Repeated calls cannot duplicate financial impact.
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-semibold">Least Privilege</div>
+          <div class="small text-muted">
+            Tool execution constrained by RBAC.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+{% endblock %}

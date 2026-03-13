@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- HERO -->
+<section class="mb-4">
+  <div class="p-4 p-lg-5 rounded-4 border shadow-sm hero-wrap text-white position-relative overflow-hidden">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge text-bg-primary">Prompting</span>
+          <span class="badge text-bg-success">Structured Output</span>
+          <span class="badge text-bg-dark border">Production Patterns</span>
+        </div>
+        <h1 class="display-6 fw-semibold mb-2">Prompting with Structured Output</h1>
+        <p class="lead mb-3 text-white-50">
+          Turn unstructured user requests into <span class="fw-semibold text-white">validated JSON</span> for tool calls,
+          workflows, tickets, and API requests—without brittle parsing.
+        </p>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-light btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocCanvas" aria-controls="tocCanvas">
+            <i class="bi bi-list"></i> Quick Navigation
+          </button>
+          <a class="btn btn-outline-light btn-sm" href="#patterns">
+            <i class="bi bi-diagram-3"></i> Patterns
+          </a>
+          <a class="btn btn-outline-light btn-sm" href="#examples">
+            <i class="bi bi-code-slash"></i> Examples
+          </a>
+          <a class="btn btn-outline-light btn-sm" href="#guardrails">
+            <i class="bi bi-shield-check"></i> Guardrails
+          </a>
+          <a class="btn btn-outline-light btn-sm" href="#checklist">
+            <i class="bi bi-check2-square"></i> Checklist
+          </a>
+        </div>
+
+        <div class="mt-4 d-flex flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill text-bg-warning">Goal</span>
+            <span class="small text-white-50">Reliable extraction → schema validation → safe actions</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill text-bg-info">Works with</span>
+            <span class="small text-white-50">LangChain / LangGraph / Flask APIs / MySQL</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card bg-dark border-0 shadow-sm rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="text-white-50 small">Core Idea</div>
+                <div class="fw-semibold text-white">“Don’t parse text. Validate JSON.”</div>
+              </div>
+              <span class="badge text-bg-success">Best Practice</span>
+            </div>
+            <hr class="border-secondary my-3">
+            <ul class="list-unstyled mb-0 small text-white-50">
+              <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Define a strict schema</li>
+              <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Ask for JSON only</li>
+              <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Validate (Pydantic/JSON Schema)</li>
+              <li class="mb-2"><i class="bi bi-check-circle text-success"></i> Execute with policy checks</li>
+              <li><i class="bi bi-check-circle text-success"></i> Return customer-ready outcome</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="alert alert-warning mt-3 mb-0 rounded-4 border-0 shadow-sm">
+          <div class="d-flex gap-2">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div class="small">
+              Structured output reduces hallucinations, but you still need:
+              <span class="fw-semibold">policy gates</span>, <span class="fw-semibold">idempotency</span>,
+              and <span class="fw-semibold">audit logs</span>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decorative blobs (optional) -->
+    <div class="position-absolute top-0 end-0 translate-middle-y opacity-25 d-none d-lg-block"
+         style="width: 280px; height: 280px; background: radial-gradient(circle at 30% 30%, rgba(13,110,253,.55), transparent 60%); border-radius: 50%;">
+    </div>
+    <div class="position-absolute bottom-0 start-0 translate-middle-x opacity-25 d-none d-lg-block"
+         style="width: 220px; height: 220px; background: radial-gradient(circle at 50% 50%, rgba(25,135,84,.45), transparent 60%); border-radius: 50%;">
+    </div>
+  </div>
+</section>
+
+<!-- Offcanvas TOC -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="tocCanvas" aria-labelledby="tocCanvasLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="tocCanvasLabel">Prompting: Structured Output</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <div class="list-group">
+      <a class="list-group-item list-group-item-action" href="#why">Why Structured Output</a>
+      <a class="list-group-item list-group-item-action" href="#patterns">Core Patterns</a>
+      <a class="list-group-item list-group-item-action" href="#schema">Schema Design</a>
+      <a class="list-group-item list-group-item-action" href="#examples">Code Examples</a>
+      <a class="list-group-item list-group-item-action" href="#guardrails">Guardrails & Policy</a>
+      <a class="list-group-item list-group-item-action" href="#failure-modes">Failure Modes</a>
+      <a class="list-group-item list-group-item-action" href="#checklist">Production Checklist</a>
+    </div>
+    <hr>
+    <div class="small text-muted">
+      Tip: keep schemas small, strict, and aligned to tools/actions you actually support.
+    </div>
+  </div>
+</div>
+
+<!-- WHY -->
+<section id="why" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Why Structured Output</h2>
+    <span class="badge text-bg-primary">Reliability</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <p class="mb-3 text-muted">
+            “Structured output” means the model returns a <strong>machine-validated object</strong> (JSON)
+            that matches a schema (JSON Schema / Pydantic). That object can drive:
+          </p>
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <div class="fw-semibold"><i class="bi bi-wrench-adjustable-circle"></i> Tool Calls</div>
+                <div class="small text-muted">APIs: replace order, update address, open ticket</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <div class="fw-semibold"><i class="bi bi-kanban"></i> Workflows</div>
+                <div class="small text-muted">LangGraph state transitions + guardrails</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <div class="fw-semibold"><i class="bi bi-journal-text"></i> Tickets & Notes</div>
+                <div class="small text-muted">Consistent payloads for CRM / ServiceNow</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <div class="fw-semibold"><i class="bi bi-clipboard-data"></i> Analytics</div>
+                <div class="small text-muted">Intent taxonomy, confidence, outcomes</div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="alert alert-success border-0 rounded-4 mb-0">
+            <div class="d-flex gap-2">
+              <i class="bi bi-lightbulb"></i>
+              <div class="small">
+                In your <strong>Customer Support Triage + Action Agent</strong>, structured output is the bridge from:
+                <span class="fw-semibold">free-form complaint</span> → <span class="fw-semibold">validated intent</span> → <span class="fw-semibold">safe actions</span>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+          <div class="fw-semibold mb-2">Anti-pattern to avoid</div>
+          <div class="p-3 border rounded-4 bg-body-tertiary">
+            <div class="small text-muted mb-1">❌ Regex extraction from prose</div>
+            <pre class="mb-0 small"><code>order_id = re.search(r"#(\d+)", text)</code></pre>
+          </div>
+          <hr>
+          <div class="fw-semibold mb-2">Preferred pattern</div>
+          <div class="p-3 border rounded-4 bg-body-tertiary">
+            <div class="small text-muted mb-1">✅ Schema + validation</div>
+            <pre class="mb-0 small"><code>{
+  "intent": "DELIVERY_WRONG_ADDRESS",
+  "order_id": "88421",
+  "requested_action": "REPLACEMENT"
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PATTERNS -->
+<section id="patterns" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Core Patterns</h2>
+    <span class="badge text-bg-success">Playbook</span>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+      <ul class="nav nav-pills flex-wrap gap-2 mb-3" id="patternTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="p1-tab" data-bs-toggle="tab" data-bs-target="#p1" type="button" role="tab">
+            1) Classify → Extract
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="p2-tab" data-bs-toggle="tab" data-bs-target="#p2" type="button" role="tab">
+            2) Clarify → Confirm
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="p3-tab" data-bs-toggle="tab" data-bs-target="#p3" type="button" role="tab">
+            3) Plan → Execute
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="p4-tab" data-bs-toggle="tab" data-bs-target="#p4" type="button" role="tab">
+            4) Summarize → Next Steps
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="patternTabsContent">
+        <div class="tab-pane fade show active" id="p1" role="tabpanel">
+          <div class="row g-3">
+            <div class="col-lg-7">
+              <h3 class="h6 fw-semibold">Intent + slots in one shot</h3>
+              <p class="text-muted small mb-2">
+                Output a minimal JSON object capturing intent and required fields. Do not mix explanation with JSON.
+              </p>
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <pre class="mb-0 small"><code>{
+  "intent": "DELIVERY_ISSUE",
+  "subtype": "WRONG_ADDRESS",
+  "order_id": "88421",
+  "requested_resolution": "REPLACEMENT",
+  "shipping_speed": "OVERNIGHT"
+}</code></pre>
+              </div>
+            </div>
+            <div class="col-lg-5">
+              <div class="alert alert-info border-0 rounded-4 mb-0">
+                <div class="fw-semibold mb-1"><i class="bi bi-info-circle"></i> Practical rule</div>
+                <div class="small">
+                  If the object can’t be validated, treat it as “needs clarification” and ask exactly one question.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="p2" role="tabpanel">
+          <h3 class="h6 fw-semibold">Clarify only what blocks action</h3>
+          <p class="text-muted small mb-2">
+            Ask a single, targeted question—then re-run extraction with the answer.
+          </p>
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <div class="small text-muted mb-1">Example clarifying question</div>
+                <div class="fw-semibold">“Can you confirm the correct shipping address for the replacement?”</div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <div class="small text-muted mb-1">Then validate again</div>
+                <pre class="mb-0 small"><code>{
+  "confirmed_shipping_address": {
+    "line1": "123 Main St",
+    "city": "Naperville",
+    "region": "IL",
+    "postal_code": "60540",
+    "country": "US"
+  }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="p3" role="tabpanel">
+          <h3 class="h6 fw-semibold">Plan with structured steps</h3>
+          <p class="text-muted small mb-2">
+            Represent your plan as an array of steps so it’s auditable and easy to replay/idempotently execute.
+          </p>
+          <div class="p-3 border rounded-4 bg-body-tertiary">
+            <pre class="mb-0 small"><code>{
+  "plan": [
+    {"tool": "orders.get", "args": {"order_id": "88421"}},
+    {"tool": "shipments.get_tracking", "args": {"order_id": "88421"}},
+    {"tool": "orders.create_replacement", "args": {"order_id": "88421", "speed": "OVERNIGHT"}},
+    {"tool": "tickets.create", "args": {"order_id": "88421", "category": "delivery_issue"}}
+  ]
+}</code></pre>
+          </div>
+          <div class="mt-3 alert alert-warning border-0 rounded-4 mb-0">
+            <div class="small">
+              Never allow the model to “invent” tools. Validate tool names and args against a known registry.
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="p4" role="tabpanel">
+          <h3 class="h6 fw-semibold">Customer-ready narrative + structured receipt</h3>
+          <p class="text-muted small mb-2">
+            Return a human explanation plus a “receipt” object for logs, dashboards, and traceability.
+          </p>
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary h-100">
+                <div class="small text-muted mb-1">Customer message</div>
+                <div class="small">
+                  “I’ve opened a delivery-issue ticket, created a replacement order, and requested overnight shipping
+                  (pending eligibility). Next, please confirm the correct address…”
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary h-100">
+                <div class="small text-muted mb-1">Receipt JSON</div>
+                <pre class="mb-0 small"><code>{
+  "case_id": "TCK-203991",
+  "replacement_order_id": "R-77821",
+  "policy": {"overnight_allowed": false, "reason": "outside_window"},
+  "next_action": "confirm_address"
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /tab-content -->
+    </div>
+  </div>
+</section>
+
+<!-- SCHEMA DESIGN -->
+<section id="schema" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Schema Design</h2>
+    <span class="badge text-bg-dark">Strictness</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="fw-semibold mb-2">Guidelines</div>
+          <ul class="small text-muted mb-0">
+            <li><strong>Keep it small</strong>: only fields you’ll use.</li>
+            <li><strong>Use enums</strong> for intent/action types.</li>
+            <li><strong>Require critical fields</strong> (e.g., order_id).</li>
+            <li><strong>Disallow extra fields</strong> to reduce drift.</li>
+            <li><strong>Normalize</strong>: prefer nested objects for addresses, items, etc.</li>
+          </ul>
+
+          <hr>
+
+          <div class="alert alert-info border-0 rounded-4 mb-0">
+            <div class="small">
+              In practice: you’ll have multiple schemas:
+              <span class="fw-semibold">Triage</span>, <span class="fw-semibold">Action Plan</span>,
+              <span class="fw-semibold">Ticket Draft</span>, and <span class="fw-semibold">Customer Reply</span>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="fw-semibold mb-2">Example: Triage Schema (concept)</div>
+          <div class="p-3 border rounded-4 bg-body-tertiary">
+            <pre class="mb-0 small"><code>{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["intent", "order_id", "requested_resolution"],
+  "properties": {
+    "intent": { "type": "string", "enum": ["DELIVERY_ISSUE","BILLING_ISSUE","CANCELLATION","STATUS_QUERY"] },
+    "order_id": { "type": "string", "pattern": "^[0-9]{4,12}$" },
+    "requested_resolution": { "type": "string", "enum": ["REPLACEMENT","REFUND","REROUTE","INVESTIGATE"] },
+    "shipping_speed": { "type": "string", "enum": ["STANDARD","EXPEDITED","OVERNIGHT"], "default": "STANDARD" },
+    "notes": { "type": "string" }
+  }
+}</code></pre>
+          </div>
+          <div class="small text-muted mt-2">
+            Pattern: <span class="fw-semibold">additionalProperties=false</span> + enums + regex patterns.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMPLES -->
+<section id="examples" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Code Examples</h2>
+    <span class="badge text-bg-primary">Flask + Python</span>
+  </div>
+
+  <div class="accordion shadow-sm rounded-4" id="examplesAcc">
+    <!-- Example 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="ex1h">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#ex1" aria-expanded="true" aria-controls="ex1">
+          Example 1 — Pydantic model (strict validation)
+        </button>
+      </h2>
+      <div id="ex1" class="accordion-collapse collapse show" aria-labelledby="ex1h" data-bs-parent="#examplesAcc">
+        <div class="accordion-body">
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="p-3 border rounded-4 bg-body-tertiary">
+                <pre class="mb-0 small"><code>from enum import Enum
+from pydantic import BaseModel, Field, ConfigDict
+
+class Intent(str, Enum):
+    DELIVERY_ISSUE = "DELIVERY_ISSUE"
+    BILLING_ISSUE = "BILLING_ISSUE"
+    CANCELLATION  = "CANCELLATION"
+    STATUS_QUERY  = "STATUS_QUERY"
+
+class Resolution(str, Enum):
+    REPLACEMENT  = "REPLACEMENT"
+    REFUND       = "REFUND"
+    REROUTE      = "REROUTE"
+    INVESTIGATE  = "INVESTIGATE"
+
+class Triage(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # disallow unknown fields
+
+    intent: Intent
+    order_id: str = Field(pattern=r"^[0-9]{4,12}$")
+    requested_resolution: Resolution
+    shipping_speed: str = Field(default="STANDARD")</code></pre>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="alert alert-success border-0 rounded-4 mb-0 h-100">
+                <div class="fw-semibold mb-1"><i class="bi bi-check2-circle"></i> Why this works</div>
+                <ul class="small mb-0">
+                  <li>Enums constrain intent/resolution to known values</li>
+                  <li>Regex ensures sane order IDs</li>
+                  <li><code>extra="forbid"</code> prevents schema drift</li>
+                  <li>Validation errors become “ask one clarifying question”</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Example 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="ex2h">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ex2" aria-expanded="false" aria-controls="ex2">
+          Example 2 — Prompt template that forces JSON only
+        </button>
+      </h2>
+      <div id="ex2" class="accordion-collapse collapse" aria-labelledby="ex2h" data-bs-parent="#examplesAcc">
+        <div class="accordion-body">
+          <div class="p-3 border rounded-4 bg-body-tertiary">
+            <pre class="mb-0 small"><code>System:
+You are a customer support triage engine.
+Return ONLY valid JSON that matches the schema.
+Do not include explanations, markdown, or extra keys.
+
+User:
+Text: "{{user_message}}"
+
+Schema (JSON Schema):
+{{triage_schema}}
+
+Rules:
+- If order_id is missing or ambiguous: set "needs_clarification" = true and
+  set "clarifying_question" to ONE question.
+- Otherwise set "needs_clarification" = false and leave "clarifying_question" empty.</code></pre>
+          </div>
+          <div class="small text-muted mt-2">
+            Tip: include <span class="fw-semibold">“Return ONLY JSON”</span> in the system message and enforce parsing/validation server-side.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Example 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="ex3h">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ex3" aria-expanded="false" aria-controls="ex3">
+          Example 3 — Workflow: validate → policy gate → tool execution
+        </button>
+      </h2>
+      <div id="ex3" class="accordion-collapse collapse" aria-labelledby="ex3h" data-bs-parent="#examplesAcc">
+        <div class="accordion-body">
+          <div class="p-3 border rounded-4 bg-body-tertiary">
+            <pre class="mb-0 small"><code># Pseudocode flow
+triage = validate_or_clarify(model_json)
+
+if triage.needs_clarification:
+    return {"type": "question", "text": triage.clarifying_question}
+
+facts = {
+  "order": orders_api.get(triage.order_id),
+  "tracking": ship_api.get_tracking(triage.order_id)
+}
+
+decision = policy_engine.evaluate(
+  intent=triage.intent,
+  requested_resolution=triage.requested_resolution,
+  facts=facts
+)
+
+if not decision.allowed:
+    # safe alternative path
+    ticket_id = tickets.create(...)
+    return customer_message_with_limits(decision, ticket_id)
+
+# allowed: execute idempotently
+replacement = orders_api.create_replacement(...)
+ticket_id = tickets.create(...)
+
+return customer_receipt(replacement, ticket_id, decision)</code></pre>
+          </div>
+
+          <div class="alert alert-warning border-0 rounded-4 mt-3 mb-0">
+            <div class="small">
+              Treat structured output as <span class="fw-semibold">input</span>, not authority.
+              Your <span class="fw-semibold">policy engine</span> is the final gate for refunds, overnight shipping, etc.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GUARDRAILS -->
+<section id="guardrails" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Guardrails & Policy Controls</h2>
+    <span class="badge text-bg-warning">Safety</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="fw-semibold mb-2"><i class="bi bi-shield-lock"></i> Policy Gate</div>
+          <div class="small text-muted">
+            Centralize business rules (refund windows, overnight eligibility, replacement limits, fraud flags).
+          </div>
+          <hr>
+          <ul class="small mb-0">
+            <li>Allow / deny with reasons</li>
+            <li>Suggest safe alternatives</li>
+            <li>Log every decision</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="fw-semibold mb-2"><i class="bi bi-arrow-repeat"></i> Idempotency</div>
+          <div class="small text-muted">
+            Make tool calls replay-safe: repeated requests shouldn’t create duplicate replacements or tickets.
+          </div>
+          <hr>
+          <ul class="small mb-0">
+            <li>Idempotency keys per case</li>
+            <li>Dedup on order_id + issue_type</li>
+            <li>Store execution receipts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 h-100">
+        <div class="card-body">
+          <div class="fw-semibold mb-2"><i class="bi bi-clipboard-check"></i> Auditability</div>
+          <div class="small text-muted">
+            Structured output makes audits easier when you capture schema version, inputs, and outcomes.
+          </div>
+          <hr>
+          <ul class="small mb-0">
+            <li>Correlation IDs end-to-end</li>
+            <li>Store request + validated JSON</li>
+            <li>Store policy decisions + tool results</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAILURE MODES -->
+<section id="failure-modes" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Common Failure Modes</h2>
+    <span class="badge text-bg-danger">Pitfalls</span>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="p-3 border rounded-4 bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">1) Overly large schema</div>
+            <div class="small text-muted">The model “fills” optional fields with invented values.</div>
+            <div class="small mt-2"><span class="badge text-bg-success">Fix</span> Use minimal required fields, forbid extras.</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded-4 bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">2) Mixed prose + JSON</div>
+            <div class="small text-muted">Parser fails; you end up writing cleanup code.</div>
+            <div class="small mt-2"><span class="badge text-bg-success">Fix</span> “Return ONLY JSON” + strict parsing.</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded-4 bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">3) Tool hallucination</div>
+            <div class="small text-muted">Model references tools you don’t have.</div>
+            <div class="small mt-2"><span class="badge text-bg-success">Fix</span> Validate tool names against registry.</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded-4 bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">4) No policy gate</div>
+            <div class="small text-muted">Model “approves” refunds/overnight shipping improperly.</div>
+            <div class="small mt-2"><span class="badge text-bg-success">Fix</span> Policy engine is the final authority.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHECKLIST -->
+<section id="checklist" class="mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Production Checklist</h2>
+    <span class="badge text-bg-success">Ship-ready</span>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="fw-semibold mb-2">Prompt & Schema</div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c1">
+            <label class="form-check-label" for="c1">Schema uses enums/regex; extra fields forbidden</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c2">
+            <label class="form-check-label" for="c2">System prompt enforces “JSON only” (no prose)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c3">
+            <label class="form-check-label" for="c3">One-clarifying-question fallback is implemented</label>
+          </div>
+
+          <hr>
+
+          <div class="fw-semibold mb-2">Execution Safety</div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c4">
+            <label class="form-check-label" for="c4">Policy engine gates refunds, shipping upgrades, replacements</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c5">
+            <label class="form-check-label" for="c5">Idempotency keys prevent duplicates</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c6">
+            <label class="form-check-label" for="c6">Tool registry validates tool names + arg schema</label>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="fw-semibold mb-2">Observability</div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c7">
+            <label class="form-check-label" for="c7">Correlation ID across model + APIs + DB</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c8">
+            <label class="form-check-label" for="c8">Store validated JSON + schema version + outcomes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c9">
+            <label class="form-check-label" for="c9">Track metrics: success rate, clarification rate, tool errors</label>
+          </div>
+
+          <hr>
+
+          <div class="fw-semibold mb-2">Customer Response</div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c10">
+            <label class="form-check-label" for="c10">Customer message includes what happened + what’s next</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="c11">
+            <label class="form-check-label" for="c11">Include receipt object for internal logs/tickets</label>
+          </div>
+
+          <div class="alert alert-secondary border-0 rounded-4 mt-3 mb-0 small">
+            If you want, I can also generate the matching Flask route + navbar entry + a “mini-demo schema” for
+            your order triage flows (replace, reroute, cancel, address change).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

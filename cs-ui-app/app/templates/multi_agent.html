@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Hero Section -->
+<section class="py-5 text-center bg-dark text-light rounded-3 mb-4">
+  <div class="container">
+    <h1 class="display-5 fw-bold">Multi-Agent Architecture</h1>
+    <p class="lead mt-3">
+      Coordinated AI Agents working together to classify, reason, fetch data,
+      enforce policy, and execute actions safely.
+    </p>
+  </div>
+</section>
+
+<!-- What is Multi-Agent -->
+<section class="mb-5">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h2 class="h4 mb-3">What is a Multi-Agent System?</h2>
+      <p class="text-muted">
+        A multi-agent architecture decomposes complex workflows into specialized
+        AI agents. Each agent owns a clear responsibility and communicates through
+        shared state or structured messages.
+      </p>
+      <ul>
+        <li><strong>Specialization</strong> — each agent performs one well-defined task</li>
+        <li><strong>Coordination</strong> — agents collaborate through orchestration</li>
+        <li><strong>Safety</strong> — policy agent validates actions before execution</li>
+        <li><strong>Observability</strong> — each step is auditable</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Agent Roles Grid -->
+<section class="mb-5">
+  <h2 class="h4 mb-4">Core Agents in Customer Support Triage</h2>
+
+  <div class="row g-4">
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">🧠 Classifier Agent</h5>
+          <p class="card-text text-muted">
+            Converts unstructured customer language into structured intent.
+          </p>
+          <small>
+            Output:
+            <ul>
+              <li>Intent: delivery_issue</li>
+              <li>Action: replacement</li>
+              <li>Priority: high</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">🔎 Retrieval Agent</h5>
+          <p class="card-text text-muted">
+            Pulls order data, tracking info, and inventory from APIs/DB.
+          </p>
+          <small>
+            Integrates with:
+            <ul>
+              <li>Orders API</li>
+              <li>Inventory Service</li>
+              <li>Shipping Provider</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">🛡 Policy Agent</h5>
+          <p class="card-text text-muted">
+            Validates whether replacement, refund, or overnight shipping
+            is permitted.
+          </p>
+          <small>
+            Enforces:
+            <ul>
+              <li>Refund rules</li>
+              <li>Shipping upgrade policy</li>
+              <li>Fraud prevention logic</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">❓ Clarification Agent</h5>
+          <p class="card-text text-muted">
+            Asks one targeted question if required before action.
+          </p>
+          <small>
+            Example:
+            <ul>
+              <li>“Please confirm your correct shipping address.”</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">⚙ Action Agent</h5>
+          <p class="card-text text-muted">
+            Executes tool calls safely (create replacement, open ticket).
+          </p>
+          <small>
+            Actions:
+            <ul>
+              <li>Create replacement order</li>
+              <li>Upgrade shipping</li>
+              <li>Open support case</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="card-title">📩 Response Agent</h5>
+          <p class="card-text text-muted">
+            Produces final customer-ready message explaining what happened.
+          </p>
+          <small>
+            Includes:
+            <ul>
+              <li>What was done</li>
+              <li>Tracking details</li>
+              <li>Next steps</li>
+            </ul>
+          </small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Architecture Flow Diagram -->
+<section class="mb-5">
+  <h2 class="h4 mb-3">State Machine / Agent Flow</h2>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body text-center">
+      <div class="p-4 bg-body-tertiary rounded-3 border">
+        <strong>
+          Classify → Fetch → Policy → Clarify → Act → Respond
+        </strong>
+      </div>
+      <p class="text-muted mt-3 mb-0">
+        Implemented using LangGraph for stateful orchestration.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Why Multi-Agent -->
+<section class="mb-5">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h2 class="h4 mb-3">Why Not a Single Prompt?</h2>
+      <p class="text-muted">
+        A single LLM prompt cannot safely handle multi-step business workflows.
+        Multi-agent architecture provides:
+      </p>
+      <ul>
+        <li>Deterministic control flow</li>
+        <li>Tool-level safety guardrails</li>
+        <li>Auditability of every decision</li>
+        <li>Enterprise-grade extensibility</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

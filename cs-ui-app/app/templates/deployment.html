@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <!-- Header -->
+  <header class="mb-5">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+      <div>
+        <h1 class="display-6 fw-semibold mb-2">Deployment Architecture</h1>
+        <p class="text-muted mb-0">
+          A production-ready reference deployment for the Customer Support Triage + Action Agent.
+          This architecture emphasizes secure identity, least privilege, observability, and safe tool-calling.
+        </p>
+      </div>
+
+      <div class="text-end">
+        <span class="badge text-bg-primary me-2">cs-triage realm</span>
+        <span class="badge text-bg-secondary">OIDC / JWT</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Core Components -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">1️⃣ Core Runtime Components</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">CS UI (Flask)</h5>
+            <p class="text-muted small mb-2">
+              Customer-facing UI and chat surface. Performs OIDC login and routes user actions to backend APIs.
+            </p>
+            <ul class="small mb-0">
+              <li><code>clientId</code>: <span class="text-muted">cs-ui</span></li>
+              <li>Redirect URI: <code>/auth/callback</code></li>
+              <li>PKCE: <code>S256</code></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Orders API</h5>
+            <p class="text-muted small mb-2">
+              Order read/write, delivery status, address validation, replacement initiation.
+            </p>
+            <ul class="small mb-0">
+              <li><code>clientId</code>: <span class="text-muted">cs-orders-api</span></li>
+              <li>Service Account enabled</li>
+              <li>Audience scopes supported</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Workflow API</h5>
+            <p class="text-muted small mb-2">
+              Orchestrates multi-step actions: policy check, tool execution, ticketing, replacement order flows.
+            </p>
+            <ul class="small mb-0">
+              <li><code>clientId</code>: <span class="text-muted">cs-workflow-api</span></li>
+              <li>Service Account enabled</li>
+              <li>Client role: <code>workflow</code></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Image Section Placeholder -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4">Deployment Diagram</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <figure class="mb-0">
+          <div class="ratio ratio-16x9">
+            <img
+              src="{{ url_for('static', filename='images/deployment.png') }}"
+              alt="Deployment architecture: UI, Orders API, Workflow API, Keycloak, Database, Observability and Secure Network Boundaries"
+              class="img-fluid rounded-3 border">
+          </div>
+
+          <figcaption class="small text-muted mt-3 text-center">
+            Recommended: show ingress/edge → UI → APIs → DB, plus Keycloak, secrets, telemetry pipeline, and network boundaries.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Identity & Access -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">2️⃣ Identity, RBAC, and Service Accounts</h2>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Keycloak Realm Controls</h5>
+            <p class="text-muted small">
+              The platform enforces least privilege via realm roles and group-based role assignments.
+              Human users (support agents) can be granted <code>order_read</code>, <code>order_write</code>,
+              <code>ticket_write</code>, while privileged actions like <code>replacement_create</code> are tightly controlled.
+            </p>
+
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Capability</th>
+                    <th>Role</th>
+                    <th>Typical Principal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Read order details</td>
+                    <td><code>order_read</code></td>
+                    <td>Support agent / workflow</td>
+                  </tr>
+                  <tr>
+                    <td>Update order</td>
+                    <td><code>order_write</code></td>
+                    <td>Support agent / workflow</td>
+                  </tr>
+                  <tr>
+                    <td>Create replacement</td>
+                    <td><code>replacement_create</code></td>
+                    <td>Workflow service account</td>
+                  </tr>
+                  <tr>
+                    <td>Open ticket</td>
+                    <td><code>ticket_write</code></td>
+                    <td>Support agent / workflow</td>
+                  </tr>
+                  <tr>
+                    <td>Update address</td>
+                    <td><code>order_address_update</code></td>
+                    <td>Privileged support ops</td>
+                  </tr>
+                  <tr>
+                    <td>Update status</td>
+                    <td><code>order_status_update</code></td>
+                    <td>Workflow / ops automation</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-2">Service-to-Service Identity</h5>
+            <p class="text-muted small mb-3">
+              Backend services authenticate using Keycloak service accounts (client credentials),
+              enabling controlled automation without embedding user passwords.
+            </p>
+
+            <ul class="small mb-0">
+              <li><code>service-account-cs-orders-api</code></li>
+              <li><code>service-account-cs-workflow-api</code></li>
+              <li>JWT contains <code>realm_access.roles</code> for authorization decisions</li>
+              <li>Prefer short-lived access tokens; refresh only where needed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Network & Secrets -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">3️⃣ Network Boundaries and Secrets</h2>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Ingress and East-West Traffic</h6>
+            <p class="text-muted small mb-0">
+              Place UI behind an edge proxy/WAF; restrict API ingress to private networks where possible.
+              Enforce TLS everywhere (external + internal mTLS where feasible).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Secrets Management</h6>
+            <p class="text-muted small mb-2">
+              Never store client secrets in Git. Load secrets from your vault / KMS / Kubernetes secrets.
+            </p>
+            <ul class="small mb-0">
+              <li>Keycloak client secrets (for service accounts)</li>
+              <li>DB credentials</li>
+              <li>Signing keys handled by Keycloak (rotation policy)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Observability -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">4️⃣ Observability and Auditability</h2>
+
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Structured Logs</h6>
+            <p class="small text-muted mb-0">
+              JSON logs with correlation IDs, tenant, user, orderId, tool-call outcomes.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Metrics</h6>
+            <p class="small text-muted mb-0">
+              Latency, error rates, tool success, policy denials, token failures.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Distributed Traces</h6>
+            <p class="small text-muted mb-0">
+              Trace UI → Orders API → Workflow API → DB spans end-to-end.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h6 class="fw-semibold">Security Events</h6>
+            <p class="small text-muted mb-0">
+              Auth failures, denied actions, suspicious retries, elevated privileges.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Deployment Checklist -->
+  <section>
+    <h2 class="h4 mb-3">5️⃣ Deployment Readiness Checklist</h2>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">
+                TLS enabled end-to-end (edge + internal), strong headers, secure cookies
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">
+                Least-privilege roles for humans and service accounts (<code>replacement_create</code> restricted)
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">
+                Secrets externalized (Vault/KMS/K8s secrets), rotated, not in source control
+              </label>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">
+                Correlation IDs propagated (request-id / trace-id) across every hop
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">
+                Rate limits + WAF rules (protect login and chat endpoints)
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" disabled>
+              <label class="form-check-label">
+                Audit logs retained (policy denies, tool calls, state changes, security events)
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <hr class="my-4">
+
+        <div class="alert alert-primary border-0 mb-0">
+          <strong>Operational Rule:</strong>
+          If the agent cannot prove (via logs + traces) that it respected policy + RBAC, the action is not production-safe.
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

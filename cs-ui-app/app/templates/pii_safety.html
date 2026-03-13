@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <!-- Hero -->
+  <div class="mb-5">
+    <h1 class="display-6 fw-bold">🔐 PII Safety & Data Protection</h1>
+    <p class="text-muted">
+      How the Customer Support Triage + Action Agent protects personally identifiable information (PII)
+      across UI, APIs, Workflow Engine, and Keycloak.
+    </p>
+  </div>
+
+  <!-- Architecture Visual -->
+ <section class="mb-5">
+  <h2 class="h4 mb-3">PII Flow Boundaries</h2>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <figure class="mb-0">
+        <img
+          src="{{ url_for('static', filename='images/pii-safety.png') }}"
+          class="img-fluid rounded-3 border"
+          alt="PII Safety State Machine - User to UI to API to Workflow to Database with security controls"
+        >
+        <figcaption class="small text-muted mt-2">
+          End-to-end secure data flow: User → UI → API → Workflow → DB.
+          Controls enforced at each boundary: Minimize, Mask, Authenticate, Enforce, Encrypt.
+        </figcaption>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+
+  <!-- What is PII -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">What Counts as PII in Our System?</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <ul class="mb-0">
+          <li>Customer name</li>
+          <li>Email address</li>
+          <li>Phone number</li>
+          <li>Shipping / Billing address</li>
+          <li>Order history tied to identity</li>
+          <li>Payment metadata (never full card data)</li>
+        </ul>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Technical Safeguards -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">Technical Safeguards</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">1️⃣ Least Privilege via Roles</h6>
+            <p class="small text-muted mb-0">
+              Roles like <code>order_read</code>, <code>order_write</code>,
+              <code>replacement_create</code>, and <code>ticket_write</code>
+              restrict what agents and service accounts can access.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">2️⃣ Audience-Restricted Tokens</h6>
+            <p class="small text-muted mb-0">
+              Access tokens include audience claims like
+              <code>aud-cs-orders-api</code> and <code>aud-cs-workflow-api</code>
+              to prevent lateral movement.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">3️⃣ PKCE + Public Client UI</h6>
+            <p class="small text-muted mb-0">
+              The <code>cs-ui</code> client uses PKCE (S256) to prevent authorization code interception.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">4️⃣ Service Account Isolation</h6>
+            <p class="small text-muted mb-0">
+              Backend services use dedicated service accounts.
+              No shared credentials. No UI token reuse.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- AI-Specific Controls -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">AI-Specific PII Controls</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <ul>
+          <li>🔎 LLM receives only minimum required fields</li>
+          <li>🧠 Sensitive values masked before prompt injection</li>
+          <li>🚫 No raw database dumps into model context</li>
+          <li>📜 Structured output enforcement (JSON schema)</li>
+          <li>🧾 Human-in-the-loop for high-risk actions</li>
+        </ul>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Data Handling Layers -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">Data Protection Layers</h2>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Layer</th>
+            <th>Protection Mechanism</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Transport</td>
+            <td>TLS (HTTPS), HSTS headers</td>
+          </tr>
+          <tr>
+            <td>Identity</td>
+            <td>OIDC + Keycloak token validation</td>
+          </tr>
+          <tr>
+            <td>Authorization</td>
+            <td>Realm roles + client scopes</td>
+          </tr>
+          <tr>
+            <td>Application</td>
+            <td>Field-level masking + DTO filtering</td>
+          </tr>
+          <tr>
+            <td>Logging</td>
+            <td>No PII in logs; correlation IDs only</td>
+          </tr>
+          <tr>
+            <td>AI Layer</td>
+            <td>Redaction before prompt + output validation</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Compliance -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">Compliance & Governance</h2>
+
+    <div class="alert alert-secondary">
+      Designed to align with:
+      <ul class="mb-0 mt-2">
+        <li>GDPR – Data minimization & right to erasure</li>
+        <li>CCPA – Consumer access controls</li>
+        <li>FedRAMP-style logging discipline</li>
+        <li>Zero-trust security model</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section>
+    <div class="card border-success shadow-sm">
+      <div class="card-body">
+        <h6 class="fw-semibold text-success">Security Principle</h6>
+        <p class="mb-0">
+          The Agent can only access what the token authorizes.
+          The model can only see what the application exposes.
+          Every action is policy-checked before execution.
+        </p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

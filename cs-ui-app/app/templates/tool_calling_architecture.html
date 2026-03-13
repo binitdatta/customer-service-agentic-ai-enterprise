@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="py-5">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold">Agentic AI Architecture</h1>
+      <p class="lead text-muted">
+        Customer Support Triage + Action Agent (Tool-Calling Workflow)
+      </p>
+      <span class="badge text-bg-primary">LangGraph • Tool Calling • Policy Guardrails</span>
+    </div>
+
+    <!-- Overview Card -->
+    <div class="card shadow-sm border-0 mb-5">
+      <div class="card-body">
+        <h4 class="mb-3">🎯 Use Case</h4>
+        <p>
+          User says:
+          <code>
+            "My order #88421 was delivered to the wrong address. I want a replacement shipped overnight."
+          </code>
+        </p>
+        <p class="mb-0">
+          The agent classifies intent → retrieves order data → validates policy →
+          executes safe actions → generates a customer-ready response.
+        </p>
+      </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+   <div class="mb-5">
+  <h3 class="mb-3">🔷 High-Level Flow</h3>
+
+  <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+          <figure class="mb-0">
+            <img
+              src="{{ url_for('static', filename='images/agent-flow-8k.png') }}"
+              class="img-fluid rounded-3 border"
+              alt="Agentic AI Flow: Classify → Fetch Facts → Policy Check → Clarify (if needed) → Act → Respond"
+              loading="lazy"
+            />
+            <figcaption class="small text-muted mt-2">
+              Classify → Fetch Facts → Policy Check → Clarify (if needed) → Act → Respond
+            </figcaption>
+          </figure>
+
+        </div>
+        </div>
+   </div>
+
+
+    <!-- Step Cards -->
+    <div class="row g-4 mb-5">
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5>1️⃣ Intent Classification</h5>
+            <p class="text-muted small">
+              Structured output via LLM function-calling.
+            </p>
+            <ul class="small">
+              <li>Intent: delivery_issue</li>
+              <li>Action: replacement</li>
+              <li>Shipping: overnight_requested</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5>2️⃣ Fact Retrieval Tools</h5>
+            <ul class="small">
+              <li>get_order_details()</li>
+              <li>get_tracking_status()</li>
+              <li>check_inventory()</li>
+            </ul>
+            <p class="text-muted small mb-0">
+              Pulls verified backend data before reasoning.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5>3️⃣ Policy Guardrails</h5>
+            <ul class="small">
+              <li>Overnight allowed?</li>
+              <li>Replacement eligibility?</li>
+              <li>Fraud check</li>
+            </ul>
+            <p class="text-muted small mb-0">
+              Deterministic policy engine — not LLM guesswork.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5>4️⃣ Clarification Node</h5>
+            <p class="small">
+              If needed:
+              <br />
+              “Please confirm the correct shipping address.”
+            </p>
+            <p class="text-muted small mb-0">
+              Controlled conversational branching.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5>5️⃣ Action Tools</h5>
+            <ul class="small">
+              <li>create_replacement_order()</li>
+              <li>upgrade_shipping()</li>
+              <li>open_support_ticket()</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5>6️⃣ Response Generation</h5>
+            <p class="small">
+              Customer-ready message summarizing:
+            </p>
+            <ul class="small">
+              <li>What was done</li>
+              <li>Tracking number</li>
+              <li>Expected delivery</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Technical Stack Section -->
+    <div class="mb-5">
+      <h3 class="mb-3">🛠 Technology Stack</h3>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Agent Orchestration</h6>
+              <ul class="small">
+                <li>LangGraph (Stateful Workflow)</li>
+                <li>Structured Output via JSON Schema</li>
+                <li>Tool Calling with Pydantic Models</li>
+              </ul>
+            </div>
+
+            <div class="col-md-6">
+              <h6>Security & Backend</h6>
+              <ul class="small">
+                <li>Flask REST APIs</li>
+                <li>MySQL / SQLAlchemy</li>
+                <li>Keycloak OAuth2 Resource Server</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Guardrail Emphasis -->
+    <div class="alert alert-warning shadow-sm">
+      <h5 class="mb-2">⚠ Guardrail Principle</h5>
+      <p class="mb-0">
+        The LLM does NOT directly refund, replace, or upgrade shipping.
+        It proposes structured actions.
+        Deterministic backend services enforce policy before execution.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

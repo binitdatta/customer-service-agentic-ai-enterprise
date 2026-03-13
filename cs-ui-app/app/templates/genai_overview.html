@@ -1,0 +1,578 @@
+{# templates/genai_overview.html #}
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+
+  <!-- Header / Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ url_for('ui.home') if 'ui.home' in (url_for.__globals__['current_app'].view_functions if url_for.__globals__.get('current_app') else {}) else '#' }}">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">GenAI Overview</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <h1 class="mb-1">GenAI Overview</h1>
+      <p class="text-muted mb-0">
+        A quick reference for Generative AI concepts, terms, and key historical milestones that shaped modern GenAI.
+      </p>
+    </div>
+
+    <!-- Bootstrap Dropdown (section navigation) -->
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Jump to a topic
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="#what-is-genai">What is GenAI?</a></li>
+        <li><a class="dropdown-item" href="#core-terms">Core Terms</a></li>
+        <li><a class="dropdown-item" href="#llm-ops">LLMOps & Production</a></li>
+        <li><a class="dropdown-item" href="#risk-guardrails">Risk & Guardrails</a></li>
+        <li><a class="dropdown-item" href="#iceberg">Iceberg: Historical Developments</a></li>
+        <li><a class="dropdown-item" href="#timeline">Reverse Chron Timeline (1950s → Today)</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Info Banner -->
+  <div class="alert alert-dark border-0 shadow-sm d-flex align-items-start gap-3" role="alert">
+    <div class="flex-shrink-0">
+      <span class="badge text-bg-success">Quick Start</span>
+    </div>
+    <div>
+      <div class="fw-semibold">How to use this page</div>
+      <div class="small text-muted">
+        Use the dropdown to jump to topics. Expand the accordions for definitions. Replace the iceberg placeholder image with your final diagram later.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section: What is GenAI -->
+  <section id="what-is-genai" class="mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <h2 class="h4 mb-0">What is Generative AI?</h2>
+          <span class="badge text-bg-primary">Overview</span>
+          <span class="badge text-bg-secondary">Concepts</span>
+        </div>
+        <p class="mb-2">
+          <strong>Generative AI</strong> refers to AI systems that <em>generate new content</em>—text, images, code, audio,
+          or structured data—based on patterns learned from training data. Most modern GenAI experiences are powered by
+          <strong>foundation models</strong> (often large language models) that can be adapted via prompting, retrieval, or fine-tuning.
+        </p>
+        <div class="row g-3 mt-2">
+          <div class="col-12 col-lg-4">
+            <div class="p-3 bg-body-tertiary rounded-3 h-100">
+              <div class="fw-semibold">Input</div>
+              <div class="small text-muted">Prompt, documents, tool results, conversation context</div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <div class="p-3 bg-body-tertiary rounded-3 h-100">
+              <div class="fw-semibold">Model</div>
+              <div class="small text-muted">LLM / multimodal model + safety + system instructions</div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <div class="p-3 bg-body-tertiary rounded-3 h-100">
+              <div class="fw-semibold">Output</div>
+              <div class="small text-muted">Answer, plan, code, tool calls, structured actions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Core Terms (Accordion) -->
+  <section id="core-terms" class="mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h2 class="h4 mb-0">Core GenAI Terms</h2>
+      <span class="badge text-bg-info">Definitions</span>
+    </div>
+
+    <div class="accordion shadow-sm" id="accordionCoreTerms">
+      <!-- LLM -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-llm">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#c-llm" aria-expanded="true" aria-controls="c-llm">
+            Large Language Model (LLM)
+          </button>
+        </h2>
+        <div id="c-llm" class="accordion-collapse collapse show" aria-labelledby="h-llm" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            An <strong>LLM</strong> is a neural network trained to predict the next token (word piece) in a sequence.
+            Despite that simple objective, it can perform reasoning-like behaviors, summarization, translation, coding, and more.
+          </div>
+        </div>
+      </div>
+
+      <!-- Foundation Model -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-foundation">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-foundation" aria-expanded="false" aria-controls="c-foundation">
+            Foundation Model
+          </button>
+        </h2>
+        <div id="c-foundation" class="accordion-collapse collapse" aria-labelledby="h-foundation" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            A <strong>foundation model</strong> is a broadly trained model (often on large, diverse datasets) that can be adapted
+            to many tasks via prompting, retrieval augmentation, or fine-tuning.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tokens -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-tokens">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-tokens" aria-expanded="false" aria-controls="c-tokens">
+            Tokens
+          </button>
+        </h2>
+        <div id="c-tokens" class="accordion-collapse collapse" aria-labelledby="h-tokens" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            <strong>Tokens</strong> are the units a model reads and produces (word pieces, punctuation, etc.). Pricing, context length,
+            and latency often scale with token count.
+          </div>
+        </div>
+      </div>
+
+      <!-- Context Window -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-context">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-context" aria-expanded="false" aria-controls="c-context">
+            Context Window
+          </button>
+        </h2>
+        <div id="c-context" class="accordion-collapse collapse" aria-labelledby="h-context" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            The <strong>context window</strong> is the maximum amount of text (tokens) the model can consider at once—system instructions,
+            conversation history, user prompt, and retrieved documents included.
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompting -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-prompting">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-prompting" aria-expanded="false" aria-controls="c-prompting">
+            Prompting (System / Developer / User)
+          </button>
+        </h2>
+        <div id="c-prompting" class="accordion-collapse collapse" aria-labelledby="h-prompting" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            <strong>Prompting</strong> is how you steer model behavior with instructions and context.
+            Common layers: <span class="badge text-bg-dark">System</span> (highest priority),
+            <span class="badge text-bg-secondary">Developer</span> (app rules),
+            <span class="badge text-bg-primary">User</span> (task request).
+          </div>
+        </div>
+      </div>
+
+      <!-- RAG -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-rag">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-rag" aria-expanded="false" aria-controls="c-rag">
+            Retrieval-Augmented Generation (RAG)
+          </button>
+        </h2>
+        <div id="c-rag" class="accordion-collapse collapse" aria-labelledby="h-rag" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            <strong>RAG</strong> is a pattern where the system retrieves relevant documents (via search / embeddings) and feeds them into the prompt,
+            grounding answers in your data and reducing hallucinations.
+          </div>
+        </div>
+      </div>
+
+      <!-- Embeddings -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-embeddings">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-embeddings" aria-expanded="false" aria-controls="c-embeddings">
+            Embeddings & Vector Search
+          </button>
+        </h2>
+        <div id="c-embeddings" class="accordion-collapse collapse" aria-labelledby="h-embeddings" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            <strong>Embeddings</strong> are numeric vectors representing meaning. <strong>Vector search</strong> finds semantically similar content
+            (e.g., “delivery issue” ↔ “package misdelivered”), enabling RAG.
+          </div>
+        </div>
+      </div>
+
+      <!-- Fine-tuning -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-finetune">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-finetune" aria-expanded="false" aria-controls="c-finetune">
+            Fine-Tuning
+          </button>
+        </h2>
+        <div id="c-finetune" class="accordion-collapse collapse" aria-labelledby="h-finetune" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            <strong>Fine-tuning</strong> updates model weights on your curated examples to specialize behavior or style.
+            Use it when prompting + RAG can’t reliably achieve required precision.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tool Calling -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-tools">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-tools" aria-expanded="false" aria-controls="c-tools">
+            Tool Calling / Function Calling
+          </button>
+        </h2>
+        <div id="c-tools" class="accordion-collapse collapse" aria-labelledby="h-tools" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            <strong>Tool calling</strong> lets the model request structured actions (API calls, DB reads, ticket creation).
+            Your application validates permissions, applies policy, and executes the action safely.
+          </div>
+        </div>
+      </div>
+
+      <!-- Agents -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="h-agents">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#c-agents" aria-expanded="false" aria-controls="c-agents">
+            Agents (Planning + Acting)
+          </button>
+        </h2>
+        <div id="c-agents" class="accordion-collapse collapse" aria-labelledby="h-agents" data-bs-parent="#accordionCoreTerms">
+          <div class="accordion-body">
+            An <strong>agent</strong> is a model-driven workflow that can plan steps, call tools, check results, and iterate.
+            It’s not “magic”—it’s orchestration plus guardrails.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: LLMOps & Production -->
+  <section id="llm-ops" class="mb-4">
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h2 class="h5">LLMOps & Production Concepts</h2>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">Evaluation (Evals)</div>
+                  <div class="small text-muted">Test suites for accuracy, safety, policy compliance, and regression.</div>
+                </div>
+                <span class="badge text-bg-secondary">Quality</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">Observability</div>
+                  <div class="small text-muted">Tracing, prompt logs (redacted), tool-call logs, latency, token cost.</div>
+                </div>
+                <span class="badge text-bg-secondary">Ops</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">Prompt Versioning</div>
+                  <div class="small text-muted">Treat prompts like code; track changes, rollbacks, and A/B tests.</div>
+                </div>
+                <span class="badge text-bg-secondary">Dev</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">Caching</div>
+                  <div class="small text-muted">Cache retrieval results and deterministic outputs to reduce cost/latency.</div>
+                </div>
+                <span class="badge text-bg-secondary">Perf</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h2 class="h5">Key Architectural Building Blocks</h2>
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="p-3 bg-body-tertiary rounded-3 h-100">
+                  <div class="fw-semibold">UI</div>
+                  <div class="small text-muted">Bootstrap / Angular / React</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-3 bg-body-tertiary rounded-3 h-100">
+                  <div class="fw-semibold">Orchestrator</div>
+                  <div class="small text-muted">LangGraph / workflows</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-3 bg-body-tertiary rounded-3 h-100">
+                  <div class="fw-semibold">Tools</div>
+                  <div class="small text-muted">Orders API, Tickets, Shipping</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-3 bg-body-tertiary rounded-3 h-100">
+                  <div class="fw-semibold">Knowledge</div>
+                  <div class="small text-muted">RAG + vector DB</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Offcanvas trigger -->
+            <button class="btn btn-outline-primary mt-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasGenAIChecklist" aria-controls="offcanvasGenAIChecklist">
+              Production Checklist
+            </button>
+
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasGenAIChecklist" aria-labelledby="offcanvasGenAIChecklistLabel">
+              <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="offcanvasGenAIChecklistLabel">Go-Live Checklist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+              </div>
+              <div class="offcanvas-body">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="" id="chk1">
+                  <label class="form-check-label" for="chk1">Policy guardrails defined (refunds, shipping upgrades, etc.)</label>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" value="" id="chk2">
+                  <label class="form-check-label" for="chk2">Tool calls validated & permissioned (server-side)</label>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" value="" id="chk3">
+                  <label class="form-check-label" for="chk3">Evals & regression tests automated in CI</label>
+                </div>
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" value="" id="chk4">
+                  <label class="form-check-label" for="chk4">Observability: traces + correlation IDs + redaction</label>
+                </div>
+                <hr>
+                <div class="small text-muted">
+                  Tip: start with “read-only” tools, then enable write actions with approvals.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Risk & Guardrails -->
+  <section id="risk-guardrails" class="mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h2 class="h4 mb-3">Risk & Guardrails</h2>
+
+        <div class="row g-3">
+          <div class="col-12 col-lg-4">
+            <div class="p-3 border rounded-3 h-100">
+              <div class="fw-semibold">Hallucination</div>
+              <div class="small text-muted">
+                Model produces plausible but incorrect statements. Mitigate with RAG, citations, constrained decoding,
+                and tool-based fact retrieval.
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <div class="p-3 border rounded-3 h-100">
+              <div class="fw-semibold">Prompt Injection</div>
+              <div class="small text-muted">
+                Malicious instructions in user content or retrieved docs. Mitigate with strict tool allowlists, sandboxing,
+                and system-level rules.
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <div class="p-3 border rounded-3 h-100">
+              <div class="fw-semibold">Data Leakage</div>
+              <div class="small text-muted">
+                Sensitive data exposure via logs, context, or responses. Mitigate with redaction, least-privilege retrieval,
+                and access controls.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Control</th>
+                <th>What it does</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="fw-semibold">Policy Engine</td>
+                <td>Enforces business rules before executing actions</td>
+                <td>“Overnight replacement only if SLA tier = Gold”</td>
+              </tr>
+              <tr>
+                <td class="fw-semibold">Tool Allowlist</td>
+                <td>Restricts which tools can be called (and how)</td>
+                <td>Read-only order lookup always allowed; refunds require approval</td>
+              </tr>
+              <tr>
+                <td class="fw-semibold">Audit Log</td>
+                <td>Records prompts, tool calls, and decisions (with redaction)</td>
+                <td>Correlation-ID + user + action + outcome</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: Iceberg Placeholder -->
+ <section id="iceberg" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Iceberg: Scientific Developments Shaping GenAI</h2>
+    <span class="badge text-bg-success">High-Resolution Visual</span>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <p class="text-muted mb-3">
+        This iceberg view illustrates how modern <strong>Generative AI</strong> (visible breakthroughs near the surface)
+        is supported by deeper layers of scientific progress—algorithms, compute, datasets, and foundational theory—
+        presented in <strong>reverse chronological order</strong>.
+      </p>
+
+      <figure class="text-center mb-0">
+
+        <!-- Iceberg Image -->
+        <img
+          src="{{ url_for('static', filename='images/gen-ai-iceberg.png') }}"
+          class="img-fluid rounded-4 shadow-lg border"
+          alt="Iceberg infographic showing scientific developments influencing Generative AI in reverse chronological order">
+
+        <!-- Caption / Legend -->
+        <figcaption class="mt-4">
+          <div class="fw-semibold mb-2">
+            GenAI Iceberg — Reverse Chronological Foundations
+          </div>
+
+          <div class="small text-muted">
+            <span class="fw-semibold">Surface (2020s):</span>
+            Transformers, Large Language Models (LLMs), tool-using agents, multimodal systems, diffusion models.
+            <br>
+            <span class="fw-semibold">Below the surface (2010s):</span>
+            Deep learning breakthroughs, GPU acceleration, large-scale data pipelines, representation learning.
+            <br>
+            <span class="fw-semibold">Deeper layers (1990s–2000s):</span>
+            Statistical learning theory, classic ML (e.g., SVMs), improved optimization, internet-scale corpora.
+            <br>
+            <span class="fw-semibold">Foundational bedrock (1950s–1980s):</span>
+            Perceptrons and early neural ideas, backpropagation, foundational AI programs and methods.
+            <br>
+            <span class="fw-semibold">Deepest roots (1940s–1950s):</span>
+            Theory of computation and early computing architecture (Turing, von Neumann).
+          </div>
+
+          <!-- Optional: dev-only note (remove later if you want) -->
+          <div class="small text-muted mt-2">
+            <span class="badge text-bg-light border">Static file</span>
+            <code>static/images/gen-ai-iceberg.png</code>
+          </div>
+
+        </figcaption>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+
+  <!-- Section: Reverse Chron Timeline -->
+  <section id="timeline" class="mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h2 class="h4 mb-0">Reverse Chron Timeline (High-Level)</h2>
+      <span class="badge text-bg-secondary">1950s → Today</span>
+    </div>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <p class="text-muted mb-3">
+          Use this as the source list for your iceberg. Keep it high-level and expand with your preferred milestones later.
+        </p>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th style="width: 9rem;">Era</th>
+                <th>Milestones (reverse chronological)</th>
+                <th style="width: 16rem;">Why it matters for GenAI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge text-bg-primary">2020s</span></td>
+                <td>
+                  Transformers at scale • Instruction tuning • Tool calling & agents • Multimodal models • Diffusion for images
+                </td>
+                <td>General-purpose generation + action-taking workflows</td>
+              </tr>
+              <tr>
+                <td><span class="badge text-bg-secondary">2010s</span></td>
+                <td>
+                  Deep learning resurgence • GPUs/accelerators • Word embeddings • Seq2Seq + attention foundations
+                </td>
+                <td>Compute + representation learning enabling modern LLMs</td>
+              </tr>
+              <tr>
+                <td><span class="badge text-bg-secondary">2000s</span></td>
+                <td>
+                  Large-scale datasets • Web search infrastructure • Statistical NLP maturity
+                </td>
+                <td>Data + pipelines that later feed foundation models</td>
+              </tr>
+              <tr>
+                <td><span class="badge text-bg-secondary">1990s</span></td>
+                <td>
+                  Probabilistic models • Support Vector Machines • Better optimization + datasets
+                </td>
+                <td>Learning theory + methods for robust generalization</td>
+              </tr>
+              <tr>
+                <td><span class="badge text-bg-secondary">1980s</span></td>
+                <td>
+                  Backpropagation popularized • Expert systems rise/fall • Early neural nets revival
+                </td>
+                <td>Training multi-layer networks becomes practical</td>
+              </tr>
+              <tr>
+                <td><span class="badge text-bg-secondary">1950s–1970s</span></td>
+                <td>
+                  Perceptron • Early AI programs • Formal logic & computation theory • “Can machines think?” era
+                </td>
+                <td>Conceptual foundations of learning + computation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-3">
+          <div class="small text-muted">
+            Next enhancement: turn this table into an “iceberg layer” list-group, where each layer expands with an accordion.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

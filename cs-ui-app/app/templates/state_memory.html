@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Hero -->
+<section class="py-4 py-lg-5">
+  <div class="p-4 p-lg-5 rounded-4 border shadow-sm hero-wrap text-white">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="display-6 fw-bold mb-2">State & Memory in Agentic Systems</h1>
+        <p class="lead mb-3 opacity-75">
+          How an agent remembers context, tracks steps, enforces safety, and stays consistent across multi-turn workflows.
+        </p>
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-light btn-sm" href="#concepts">Concepts</a>
+          <a class="btn btn-outline-light btn-sm" href="#patterns">Patterns</a>
+          <a class="btn btn-outline-light btn-sm" href="#cs-triage">Order Triage Mapping</a>
+          <a class="btn btn-outline-light btn-sm" href="#guardrails">Guardrails</a>
+          <a class="btn btn-outline-light btn-sm" href="#anti-patterns">Anti-Patterns</a>
+        </div>
+      </div>
+
+      <div class="text-end">
+        <span class="badge rounded-pill text-bg-info me-1">Bootstrap 5</span>
+        <span class="badge rounded-pill text-bg-success me-1">LangGraph-friendly</span>
+        <span class="badge rounded-pill text-bg-warning">Production mindset</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Summary Cards -->
+<section class="mb-4">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-2">State</h2>
+          <p class="text-muted mb-0">
+            The <strong>current working context</strong>: what we know, what we’ve decided, what step we’re on, and
+            what’s still missing.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-2">Memory</h2>
+          <p class="text-muted mb-0">
+            The <strong>stored knowledge</strong> across turns/sessions: customer preferences, prior tickets, policy decisions,
+            and conversation history.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-2">Persistence</h2>
+          <p class="text-muted mb-0">
+            Where state/memory lives: <strong>session</strong>, <strong>cache</strong>, <strong>DB</strong>, or an external
+            store. Defines reliability, privacy, and replayability.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Concepts -->
+<section id="concepts" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Core Concepts</h2>
+    <span class="badge text-bg-primary">Foundations</span>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <h3 class="h5">What “State” usually contains</h3>
+          <ul class="text-muted mb-0">
+            <li><strong>Intent</strong> + classification (delivery issue, refund request, address change)</li>
+            <li><strong>Entities</strong> (order_id, customer_id, item_sku, carrier, tracking_id)</li>
+            <li><strong>Facts</strong> fetched via tools (order status, address on file, delivery proof, inventory availability)</li>
+            <li><strong>Workflow step</strong> (triage → verify → policy check → action → confirm)</li>
+            <li><strong>Open questions</strong> (missing address confirmation, “overnight allowed?”)</li>
+            <li><strong>Safety flags</strong> (refund requires approval, suspicious pattern, high-risk change)</li>
+          </ul>
+        </div>
+
+        <div class="col-lg-6">
+          <h3 class="h5">What “Memory” usually contains</h3>
+          <ul class="text-muted mb-0">
+            <li><strong>Conversation history</strong> (short-term memory)</li>
+            <li><strong>User profile</strong> preferences (delivery instructions, default address, contact preference)</li>
+            <li><strong>Prior outcomes</strong> (previous replacements/refunds, known fraud signals)</li>
+            <li><strong>Policy knowledge</strong> (what shipping upgrades are allowed)</li>
+            <li><strong>Operational context</strong> (recent carrier delays, outage notices)</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="p-3 rounded-3 border bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">Ephemeral State</div>
+            <div class="text-muted small">
+              Lives only during one request/turn. Fast, cheap, but not recoverable after restart.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 rounded-3 border bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">Session State</div>
+            <div class="text-muted small">
+              Lives across browser session/login. Useful for UI experiences and short workflows.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 rounded-3 border bg-body-tertiary h-100">
+            <div class="fw-semibold mb-1">Durable Memory</div>
+            <div class="text-muted small">
+              Stored in DB/cache/vector store. Enables continuity, auditing, and “resume after failure”.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Patterns -->
+<section id="patterns" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Practical Design Patterns</h2>
+    <span class="badge text-bg-success">Architectural</span>
+  </div>
+
+  <div class="accordion shadow-sm" id="patternsAcc">
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="p1h">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#p1" aria-expanded="true" aria-controls="p1">
+          Pattern 1: “State as a Contract” (Typed State)
+        </button>
+      </h2>
+      <div id="p1" class="accordion-collapse collapse show" aria-labelledby="p1h" data-bs-parent="#patternsAcc">
+        <div class="accordion-body">
+          <p class="text-muted mb-2">
+            Define a stable schema for state (like a DTO). Every node reads/writes the same structured object.
+            This reduces drift and makes your graph debuggable.
+          </p>
+          <div class="bg-body-tertiary border rounded-3 p-3">
+            <div class="small text-muted mb-1">Example state fields (conceptual)</div>
+            <ul class="mb-0 small">
+              <li><strong>intent</strong>, <strong>order_id</strong>, <strong>customer_id</strong></li>
+              <li><strong>facts</strong>: order_status, delivery_address, tracking_status, item_availability</li>
+              <li><strong>policy</strong>: allowed_actions, requires_human_approval</li>
+              <li><strong>actions_taken</strong>: replacement_created, ticket_opened</li>
+              <li><strong>pending_question</strong>: “Confirm correct shipping address?”</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="p2h">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p2" aria-expanded="false" aria-controls="p2">
+          Pattern 2: Short-Term vs Long-Term Memory Split
+        </button>
+      </h2>
+      <div id="p2" class="accordion-collapse collapse" aria-labelledby="p2h" data-bs-parent="#patternsAcc">
+        <div class="accordion-body">
+          <p class="text-muted mb-2">
+            Keep short-term context in conversation/state. Persist only what you truly need long-term (auditable outcomes,
+            preferences, stable facts).
+          </p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3 h-100">
+                <div class="fw-semibold">Short-Term (per conversation)</div>
+                <ul class="text-muted small mb-0">
+                  <li>Current issue summary</li>
+                  <li>Latest tool results</li>
+                  <li>Clarifying question and answer</li>
+                  <li>Step pointer (where we are in the flow)</li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded-3 h-100">
+                <div class="fw-semibold">Long-Term (durable)</div>
+                <ul class="text-muted small mb-0">
+                  <li>Replacement/refund decisions</li>
+                  <li>Ticket IDs and timestamps</li>
+                  <li>Fraud/abuse flags (with governance)</li>
+                  <li>User preferences (opt-in)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="p3h">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#p3" aria-expanded="false" aria-controls="p3">
+          Pattern 3: Event Log + Replay (“Recoverable Agents”)
+        </button>
+      </h2>
+      <div id="p3" class="accordion-collapse collapse" aria-labelledby="p3h" data-bs-parent="#patternsAcc">
+        <div class="accordion-body">
+          <p class="text-muted mb-2">
+            Persist key transitions (inputs, tool calls, decisions, outputs). If the process crashes, you can resume
+            deterministically and produce an audit trail.
+          </p>
+          <div class="alert alert-info mb-0">
+            <strong>Tip:</strong> Log correlation IDs end-to-end (UI → workflow API → orders API → ticketing) so every action is traceable.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CS Triage Mapping -->
+<section id="cs-triage" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Mapping to Your Order Support Triage + Action Agent</h2>
+    <span class="badge text-bg-dark">Use Case</span>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <h3 class="h5">Example customer message</h3>
+          <div class="border rounded-3 p-3 bg-body-tertiary">
+            <div class="small text-muted mb-1">User</div>
+            <div class="fw-semibold">
+              “My order #88421 was delivered to the wrong address. I want a replacement shipped overnight.”
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <h3 class="h5">State progression (high-level)</h3>
+          <ol class="text-muted">
+            <li><strong>Classify</strong>: delivery issue + replacement request + expedited shipping request</li>
+            <li><strong>Fetch facts</strong>: order details, delivery proof, address, tracking, item availability</li>
+            <li><strong>Policy check</strong>: eligible for replacement? overnight allowed?</li>
+            <li><strong>Clarify</strong> (only if needed): confirm correct address, confirm recipient name</li>
+            <li><strong>Act</strong>: create replacement, open ticket, notify customer</li>
+            <li><strong>Close</strong>: summary + next steps + SLA</li>
+          </ol>
+        </div>
+
+        <div class="col-lg-5">
+          <h3 class="h5">What to persist vs not persist</h3>
+          <div class="p-3 border rounded-3 mb-3">
+            <div class="fw-semibold">Persist (Durable)</div>
+            <ul class="small text-muted mb-0">
+              <li>ticket_id, replacement_order_id</li>
+              <li>policy decision + reason</li>
+              <li>final resolved address (if approved)</li>
+              <li>timestamps + correlation_id</li>
+            </ul>
+          </div>
+          <div class="p-3 border rounded-3">
+            <div class="fw-semibold">Don’t persist (unless required)</div>
+            <ul class="small text-muted mb-0">
+              <li>raw chat transcript (or store with strict retention)</li>
+              <li>full PII details beyond need</li>
+              <li>intermediate tool responses that contain sensitive fields</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+     <!-- State Machine Diagram -->
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-2">
+            <figure class="mb-0 text-center">
+              <img
+                src="{{ url_for('static', filename='images/state-machine-flow.png') }}"
+                alt="State Machine Graph Flow: Classify → Fetch → Policy → Clarify → Act → Respond"
+                class="img-fluid rounded-3 border"
+                loading="lazy"
+              >
+              <figcaption class="small text-muted mt-2">
+                State Machine / Graph Flow: Classify → Fetch → Policy → Clarify → Act → Respond
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+    </div>
+  </div>
+</section>
+
+<!-- Guardrails -->
+<section id="guardrails" class="mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Guardrails: Safety, Policy, and Authorization</h2>
+    <span class="badge text-bg-warning">Must-have</span>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h3 class="h6 mb-2">Policy Gate</h3>
+          <p class="text-muted mb-0">
+            Don’t refund/overnight/replace unless policy says yes. Store policy decisions in state as structured fields
+            (<code>allowed_actions</code>, <code>requires_approval</code>).
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h3 class="h6 mb-2">Tool Authorization</h3>
+          <p class="text-muted mb-0">
+            Gate “write” tools behind scopes/roles. Your agent’s state should carry
+            <strong>who</strong> is acting and <strong>what</strong> they are allowed to do.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h3 class="h6 mb-2">Audit + Correlation</h3>
+          <p class="text-muted mb-0">
+            Every action taken must be traceable: correlation ID, tool input/output summaries (sanitized),
+            and outcome IDs (ticket/replacement).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-warning mt-3 mb-0">
+    <strong>Rule of thumb:</strong> The model may “decide”, but your code enforces “allow/deny”.
+    State should record <em>why</em> a decision was allowed/blocked.
+  </div>
+</section>
+
+<!-- Anti-Patterns -->
+<section id="anti-patterns" class="mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h2 class="h4 mb-0">Common Anti-Patterns</h2>
+    <span class="badge text-bg-danger">Avoid</span>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="p-3 border rounded-3 h-100">
+            <div class="fw-semibold">“Everything is memory”</div>
+            <div class="text-muted small">
+              Persisting raw transcripts + PII everywhere increases risk and makes compliance painful.
+              Persist outcomes and minimal required facts.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded-3 h-100">
+            <div class="fw-semibold">Unbounded state growth</div>
+            <div class="text-muted small">
+              Tool outputs accumulate forever; prompts blow up; costs rise; latency increases.
+              Summarize and prune.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded-3 h-100">
+            <div class="fw-semibold">Hidden decisions</div>
+            <div class="text-muted small">
+              If the agent decides “overnight shipping” without recording policy checks, you can’t audit or debug.
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="p-3 border rounded-3 h-100">
+            <div class="fw-semibold">No idempotency</div>
+            <div class="text-muted small">
+              Retries create multiple replacements/tickets. Record action IDs in state and make tool calls idempotent.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="text-muted small">
+          Want this page to match your LangChain/LangGraph styling exactly? Reuse the same hero CSS + card spacing rules from your working page.
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <!-- Header -->
+  <div class="mb-5">
+    <h1 class="display-6 fw-bold">Observability Architecture</h1>
+    <p class="text-muted">
+      End-to-end visibility for the Customer Support Triage + Action Agent.
+      Covers Logs, Metrics, Distributed Tracing, Security Auditing, and AI Decision Transparency.
+    </p>
+  </div>
+
+  <!-- 1️⃣ Why Observability Matters -->
+  <section class="mb-5">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <h2 class="h4 mb-3">Why Observability is Critical for Agentic AI</h2>
+
+        <ul class="text-muted">
+          <li>Diagnose failed replacement orders or policy denials</li>
+          <li>Trace multi-step agent decisions (classify → fetch → act)</li>
+          <li>Audit who executed privileged operations</li>
+          <li>Detect token misuse or role escalation</li>
+          <li>Measure SLA and latency across APIs</li>
+        </ul>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 2️⃣ High-Level Observability Flow -->
+ <section class="mb-5">
+
+  <h2 class="h4 mb-4">End-to-End Telemetry Flow</h2>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+
+      <figure class="mb-0">
+        <div class="ratio ratio-16x9">
+          <img src="{{ url_for('static', filename='images/observability.png') }}"
+     alt="UI to Orders API to Workflow API to Database with Structured Logs, Metrics, Distributed Traces and Security Events"
+     class="img-fluid rounded-3 border">
+        </div>
+
+        <figcaption class="small text-muted mt-3 text-center">
+          UI → Orders API → Workflow API → DB
+          <br>
+          Structured Logs • Metrics • Distributed Traces • Security Events
+        </figcaption>
+      </figure>
+
+    </div>
+  </div>
+
+</section>
+
+  <!-- 3️⃣ Observability Layers -->
+  <section class="mb-5">
+
+    <h2 class="h4 mb-4">Observability Layers</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">🔹 Structured Logging</h5>
+            <ul class="small text-muted mb-0">
+              <li>Correlation ID per request</li>
+              <li>Order ID tagging (#88421)</li>
+              <li>Agent step logging (classify, fetch, act)</li>
+              <li>Masked PII fields</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">📊 Metrics</h5>
+            <ul class="small text-muted mb-0">
+              <li>API latency (P95, P99)</li>
+              <li>Replacement creation rate</li>
+              <li>Policy denial frequency</li>
+              <li>Error rate by endpoint</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">🧵 Distributed Tracing</h5>
+            <ul class="small text-muted mb-0">
+              <li>Trace ID propagated via headers</li>
+              <li>UI → Orders API → Workflow API</li>
+              <li>DB query span timing</li>
+              <li>External API spans</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">🔐 Security & IAM Events</h5>
+            <ul class="small text-muted mb-0">
+              <li>Role-based access enforcement</li>
+              <li>Service account token usage</li>
+              <li>Admin actions auditing</li>
+              <li>Authentication failures</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- 4️⃣ Keycloak Observability -->
+  <section class="mb-5">
+
+    <h2 class="h4 mb-4">Identity & Token Observability</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <p class="text-muted">
+          Realm: <strong>cs-triage</strong>
+        </p>
+
+        <ul class="small text-muted">
+          <li>Track access tokens issued for <strong>cs-ui</strong></li>
+          <li>Audit service accounts: <strong>cs-orders-api</strong>, <strong>cs-workflow-api</strong></li>
+          <li>Monitor role usage (order_write, replacement_create, ticket_write)</li>
+          <li>Track admin operations via realm-management roles</li>
+        </ul>
+
+        <div class="alert alert-light border small mt-3 mb-0">
+          Security events and token issuance must be forwarded to centralized logging (SIEM).
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 5️⃣ AI Agent Decision Transparency -->
+  <section class="mb-5">
+
+    <h2 class="h4 mb-4">AI Agent Decision Transparency</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <ul class="small text-muted mb-0">
+          <li>Log classification output (intent: delivery_issue)</li>
+          <li>Log policy decision (overnight shipping allowed = true/false)</li>
+          <li>Log tool calls executed</li>
+          <li>Log clarifying question (if any)</li>
+          <li>Log final action summary</li>
+        </ul>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 6️⃣ Recommended Stack -->
+  <section class="mb-4">
+
+    <h2 class="h4 mb-4">Recommended Observability Stack</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">Logs</h6>
+            <p class="small text-muted mb-0">
+              ELK / OpenSearch / Cloud Logging
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">Metrics</h6>
+            <p class="small text-muted mb-0">
+              Prometheus + Grafana
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+          <div class="card-body">
+            <h6 class="fw-semibold">Tracing</h6>
+            <p class="small text-muted mb-0">
+              OpenTelemetry + Jaeger / Tempo
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+{% endblock %}

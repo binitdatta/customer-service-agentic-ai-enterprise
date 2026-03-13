@@ -1,0 +1,968 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-3">
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-1">Chat</h1>
+      <div class="text-muted small">UI → (proxy) → Workflow API (port 6062) → Response</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button id="btnClear" type="button" class="btn btn-outline-secondary btn-sm">Clear</button>
+      <button id="btnExample" type="button" class="btn btn-outline-primary btn-sm">Insert Example</button>
+    </div>
+  </div>
+
+  <!-- Configuration -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-lg-8">
+          <label for="workflowUrl" class="form-label mb-1 small text-muted">Workflow endpoint</label>
+          <input id="workflowUrl" class="form-control" type="text"
+            value="{{ workflow_url | default('/ui/chat', true) }}" placeholder="/ui/chat">
+          <div class="form-text">Default is <code>/ui/chat</code> (same-origin proxy).</div>
+        </div>
+        <div class="col-12 col-lg-4">
+          <label for="timeoutMs" class="form-label mb-1 small text-muted">Request timeout (ms)</label>
+          <input id="timeoutMs" class="form-control" type="number" min="1000" step="500" value="45000">
+          <div class="form-text">Abort the call if it takes too long.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat transcript -->
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+      <div class="fw-semibold">Conversation</div>
+      <div class="small text-muted" id="statusLine">Idle</div>
+    </div>
+    <div class="card-body" style="height: 52vh; overflow-y: auto;" id="chatScroll">
+      <div id="chatLog" class="d-flex flex-column gap-3"></div>
+      <div id="emptyState" class="text-center text-muted py-5">
+        <div class="mb-2"><span class="badge text-bg-light border">Ready</span></div>
+        Type a message below and hit <kbd>Ctrl</kbd>+<kbd>Enter</kbd> (or click Send).
+      </div>
+    </div>
+  </div>
+
+  <!-- Error alert -->
+  <div id="errorBox" class="alert alert-danger d-none" role="alert">
+    <div class="fw-semibold mb-1">Request failed</div>
+    <div class="small mb-0" id="errorText"></div>
+  </div>
+
+  <!-- Input area -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <form id="chatForm" class="mb-0">
+        <label for="prompt" class="form-label fw-semibold mb-2">Your message</label>
+        <textarea id="prompt" name="prompt" class="form-control" rows="4"
+          placeholder="Example: My order #88421 was delivered to the wrong address. I want a replacement shipped overnight."
+          maxlength="5000" required></textarea>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <div class="small text-muted">
+            <span id="charCount">0</span>/5000 • <span class="text-nowrap">Ctrl+Enter to send</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button id="btnSend" type="submit" class="btn btn-primary">
+              <span class="me-2">Send</span>
+              <span id="sendSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </form>
+      <hr class="my-3">
+      <div class="small text-muted">
+        Tip: Default uses <code>/ui/chat</code> so your UI backend can securely relay the Keycloak access token to Workflow API.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const chatForm    = document.getElementById("chatForm");
+  const promptEl    = document.getElementById("prompt");
+  const chatLog     = document.getElementById("chatLog");
+  const chatScroll  = document.getElementById("chatScroll");
+  const emptyState  = document.getElementById("emptyState");
+  const btnSend     = document.getElementById("btnSend");
+  const sendSpinner = document.getElementById("sendSpinner");
+  const statusLine  = document.getElementById("statusLine");
+  const errorBox    = document.getElementById("errorBox");
+  const errorText   = document.getElementById("errorText");
+  const charCount   = document.getElementById("charCount");
+  const workflowUrl = document.getElementById("workflowUrl");
+  const timeoutMsEl = document.getElementById("timeoutMs");
+  const btnClear    = document.getElementById("btnClear");
+  const btnExample  = document.getElementById("btnExample");
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IMPROVEMENT 1 — Global prefill function
+  // Any action button anywhere in any card calls this to pre-fill the textarea.
+  // ─────────────────────────────────────────────────────────────────────────
+  function prefillPrompt(text) {
+    promptEl.value = text;
+    charCount.textContent = String(text.length);
+    promptEl.focus();
+    promptEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Flash highlight to draw agent's attention
+    promptEl.classList.add("border-primary");
+    setTimeout(() => promptEl.classList.remove("border-primary"), 1200);
+  }
+
+  // Expose globally so onclick= attributes in injected HTML can reach it
+  window._prefill = prefillPrompt;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Utility helpers
+  // ─────────────────────────────────────────────────────────────────────────
+  function nowTime() {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+  function setBusy(isBusy, msg) {
+    btnSend.disabled = isBusy;
+    sendSpinner.classList.toggle("d-none", !isBusy);
+    statusLine.textContent = msg || (isBusy ? "Working..." : "Idle");
+  }
+  function showError(message) {
+    errorText.textContent = message || "Unknown error.";
+    errorBox.classList.remove("d-none");
+  }
+  function clearError() {
+    errorBox.classList.add("d-none");
+    errorText.textContent = "";
+  }
+  function scrollToBottom() {
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = String(text ?? "");
+    return div.innerHTML;
+  }
+  function get(obj, path, fallback) {
+    try {
+      let cur = obj;
+      for (const p of path) { if (cur == null) return fallback; cur = cur[p]; }
+      return (cur === undefined || cur === null) ? fallback : cur;
+    } catch { return fallback; }
+  }
+  function fmt(v, fallback = "—") {
+    if (v === undefined || v === null) return fallback;
+    const s = String(v).trim();
+    return s ? s : fallback;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IMPROVEMENT 2 — Status stepper
+  // Shows the full CREATED→PAID→FULFILLING→SHIPPED→DELIVERED→CLOSED pipeline
+  // with the current status highlighted.
+  // ─────────────────────────────────────────────────────────────────────────
+  const STATUS_STEPS = ["CREATED", "PAID", "FULFILLING", "SHIPPED", "DELIVERED", "CLOSED"];
+  const STATUS_COLOURS = {
+    CREATED:    { active: "#6c757d", done: "#adb5bd" },
+    PAID:       { active: "#0dcaf0", done: "#7de8f5" },
+    FULFILLING: { active: "#0d6efd", done: "#6ea8fe" },
+    SHIPPED:    { active: "#ffc107", done: "#ffe083" },
+    DELIVERED:  { active: "#198754", done: "#a3cfbb" },
+    CLOSED:     { active: "#212529", done: "#6c757d" },
+    CANCELLED:  { active: "#dc3545", done: "#f1aeb5" },
+  };
+
+  function renderStatusStepper(currentStatus) {
+    const upper = (currentStatus || "").toUpperCase();
+    const isCancelled = upper === "CANCELLED";
+
+    if (isCancelled) {
+      return `
+        <div class="d-flex align-items-center gap-2 py-2">
+          <span class="badge text-bg-danger px-3 py-2" style="font-size:0.85rem;">✕ CANCELLED</span>
+          <span class="text-muted small">This order has been cancelled.</span>
+        </div>`;
+    }
+
+    const currentIdx = STATUS_STEPS.indexOf(upper);
+    const steps = STATUS_STEPS.map((step, i) => {
+      const isDone    = i < currentIdx;
+      const isActive  = i === currentIdx;
+      const col       = STATUS_COLOURS[step] || { active: "#6c757d", done: "#adb5bd" };
+      const bg        = isActive ? col.active : isDone ? col.done : "#e9ecef";
+      const textCol   = isActive ? "#fff" : isDone ? "#495057" : "#adb5bd";
+      const weight    = isActive ? "700" : "400";
+      const icon      = isDone ? "✓" : isActive ? "●" : String(i + 1);
+
+      return `
+        <div class="d-flex flex-column align-items-center" style="min-width:72px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:${bg};
+                      display:flex;align-items:center;justify-content:center;
+                      color:${textCol};font-weight:${weight};font-size:0.8rem;
+                      border:2px solid ${isActive ? col.active : isDone ? col.done : "#dee2e6"};">
+            ${icon}
+          </div>
+          <div class="mt-1 text-center" style="font-size:0.65rem;font-weight:${weight};
+               color:${isActive ? col.active : isDone ? "#495057" : "#adb5bd"};">
+            ${step}
+          </div>
+        </div>`;
+    });
+
+    // Connector lines between steps
+    const parts = [];
+    steps.forEach((s, i) => {
+      parts.push(s);
+      if (i < steps.length - 1) {
+        const lineCol = i < currentIdx ? "#adb5bd" : "#dee2e6";
+        parts.push(`<div style="flex:1;height:2px;background:${lineCol};margin-bottom:18px;"></div>`);
+      }
+    });
+
+    return `
+      <div class="d-flex align-items-center justify-content-between px-1 py-2" style="overflow-x:auto;">
+        ${parts.join("")}
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IMPROVEMENT 3 — Address with verified badge
+  // Shows address fields + a green "Verified" badge if address_id is present
+  // (meaning it went through /api/addresses/resolve successfully).
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderAddressVerified(addr, label) {
+    if (!addr || typeof addr !== "object") {
+      return `<div class="text-muted small">—</div>`;
+    }
+    const line1  = addr.line1  || addr.address1 || addr.street1;
+    const line2  = addr.line2  || addr.address2 || addr.street2;
+    const city   = addr.city;
+    const region = addr.region || addr.state;
+    const postal = addr.postal_code || addr.zip || addr.postalCode;
+    const country = addr.country || "US";
+    const addrId  = addr.address_id || addr.addressId || addr.id;
+
+    const l2html = (line2 && String(line2).trim())
+      ? `<div>${escapeHtml(line2)}</div>` : "";
+    const l3 = `${fmt(city)}${city ? "," : ""} ${fmt(region)} ${fmt(postal)}`
+      .replace(/\s+/g, " ").trim();
+
+    const verifiedBadge = addrId
+      ? `<span class="badge text-bg-success ms-1" style="font-size:0.65rem;">✓ Verified #${addrId}</span>`
+      : `<span class="badge text-bg-warning text-dark ms-1" style="font-size:0.65rem;">Unverified</span>`;
+
+    return `
+      <div class="small">
+        <div class="d-flex align-items-center gap-1 mb-1">
+          <span class="text-muted">${escapeHtml(label)}</span>
+          ${verifiedBadge}
+        </div>
+        <div class="fw-semibold">${escapeHtml(fmt(line1))}</div>
+        ${l2html}
+        <div>${escapeHtml(l3)}</div>
+        <div class="text-muted">${escapeHtml(country)}</div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Line items table (unchanged logic, used by order cards)
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderKeyValueRow(label, value) {
+    return `
+      <div class="row g-2 align-items-center mb-2">
+        <div class="col-12 col-md-4"><div class="text-muted small">${escapeHtml(label)}</div></div>
+        <div class="col-12 col-md-8"><div class="fw-semibold">${escapeHtml(fmt(value))}</div></div>
+      </div>`;
+  }
+
+  function renderOrderLinesTable(lines) {
+    if (!Array.isArray(lines) || lines.length === 0)
+      return `<div class="text-muted small">No line items.</div>`;
+    const rows = lines.map((ln, idx) => {
+      const sku   = ln.sku   || ln.item_sku  || ln.itemSku  || ln.product_sku;
+      const qty   = ln.qty   || ln.quantity  || ln.ordered_qty || ln.orderedQty;
+      const price = ln.unit_price || ln.unitPrice || ln.price;
+      const desc  = ln.description || ln.item_description || ln.itemDescription;
+      return `<tr>
+        <td class="text-muted">${idx + 1}</td>
+        <td class="fw-semibold">${escapeHtml(fmt(sku))}</td>
+        <td>${escapeHtml(fmt(desc))}</td>
+        <td class="text-end">${escapeHtml(fmt(qty))}</td>
+        <td class="text-end">${escapeHtml(fmt(price))}</td>
+      </tr>`;
+    }).join("");
+    return `
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width:50px;">#</th><th>SKU</th><th>Description</th>
+              <th class="text-end" style="width:90px;">Qty</th>
+              <th class="text-end" style="width:110px;">Unit</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IMPROVEMENT 4 — Inline timeline (last 5 events inside the order card)
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderInlineTimeline(events) {
+    if (!Array.isArray(events) || events.length === 0) return "";
+    const recent = events.slice(0, 5);
+    const rows = recent.map(ev => {
+      const evType = fmt(ev.event_type || ev.eventType);
+      const badgeMap = {
+        ORDER_CREATED:       "text-bg-secondary",
+        STATUS_UPDATED:      "text-bg-primary",
+        ADDRESS_UPDATED:     "text-bg-info",
+        REPLACEMENT_REQUESTED: "text-bg-warning",
+        REPLACEMENT_CREATED: "text-bg-success",
+        CANCELLED:           "text-bg-danger",
+      };
+      const badge = badgeMap[evType] || "text-bg-light border";
+      return `<tr>
+        <td class="text-muted small text-nowrap" style="width:140px;">${escapeHtml(fmt(ev.created_at || ev.createdAt))}</td>
+        <td style="width:180px;"><span class="badge ${badge}" style="font-size:0.65rem;">${escapeHtml(evType)}</span></td>
+        <td class="small">${escapeHtml(fmt(ev.message))}</td>
+        <td class="small text-muted text-nowrap" style="width:100px;">${escapeHtml(fmt(ev.actor_username || ev.actor))}</td>
+      </tr>`;
+    }).join("");
+    const moreNote = events.length > 5
+      ? `<div class="text-muted small mt-1">${events.length - 5} more events — ask for full timeline</div>` : "";
+    return `
+      <div class="border rounded-3 p-3 mt-0">
+        <div class="fw-semibold mb-2 d-flex align-items-center justify-content-between">
+          <span>Recent Activity</span>
+          <span class="badge text-bg-light border">${events.length} events</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr><th>Time</th><th>Event</th><th>Detail</th><th>Actor</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        ${moreNote}
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // IMPROVEMENT 5 — Action buttons that pre-fill the textarea
+  // Generates context-aware buttons based on order status.
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderActionButtons(orderNumber, status, shipTo) {
+    const upper = (status || "").toUpperCase();
+    const n = escapeHtml(orderNumber || "");
+
+    // Build address string for the update prompt if we have one
+    const addrStr = (shipTo && shipTo.line1)
+      ? `${shipTo.line1}, ${shipTo.city || ""}, ${shipTo.region || ""} ${shipTo.postal_code || ""} ${shipTo.country || "US"}`.replace(/\s+/g, " ").trim()
+      : "<new address here>";
+
+    const buttons = [];
+
+    // Cancel — allowed in CREATED, PAID, FULFILLING
+    if (["CREATED", "PAID", "FULFILLING"].includes(upper)) {
+      const prompt = `Cancel order #${orderNumber}. Reason: customer request.`;
+      buttons.push(`<button class="btn btn-outline-danger btn-sm"
+        onclick="window._prefill(${JSON.stringify(prompt)})">✕ Cancel</button>`);
+    }
+
+    // Update Address — allowed in CREATED, PAID, FULFILLING
+    if (["CREATED", "PAID", "FULFILLING"].includes(upper)) {
+      const prompt = `Update shipping address for order #${orderNumber} to ${addrStr}.`;
+      buttons.push(`<button class="btn btn-outline-info btn-sm"
+        onclick="window._prefill(${JSON.stringify(prompt)})">📍 Update Address</button>`);
+    }
+
+    // Status Update — show next logical status
+    const nextStatus = {
+      CREATED: "PAID", PAID: "FULFILLING",
+      FULFILLING: "SHIPPED", SHIPPED: "DELIVERED", DELIVERED: "CLOSED"
+    }[upper];
+    if (nextStatus) {
+      const prompt = `Update status of order #${orderNumber} to ${nextStatus}. Source OPS_TOOL.`;
+      buttons.push(`<button class="btn btn-outline-primary btn-sm"
+        onclick="window._prefill(${JSON.stringify(prompt)})">↑ Mark ${nextStatus}</button>`);
+    }
+
+    // Replacement — allowed in FULFILLING, SHIPPED, DELIVERED
+    if (["FULFILLING", "SHIPPED", "DELIVERED"].includes(upper)) {
+      const prompt = `Replace order ${orderNumber}. Replacement order number ${orderNumber}-R1. Ship speed STANDARD.`;
+      buttons.push(`<button class="btn btn-outline-success btn-sm"
+        onclick="window._prefill(${JSON.stringify(prompt)})">↺ Request Replacement</button>`);
+    }
+
+    // Timeline — always available
+    const timelinePrompt = `Show me the timeline for order #${orderNumber}.`;
+    buttons.push(`<button class="btn btn-outline-secondary btn-sm"
+      onclick="window._prefill(${JSON.stringify(timelinePrompt)})">📋 Timeline</button>`);
+
+    if (buttons.length === 0) return "";
+    return `
+      <div class="border rounded-3 p-3">
+        <div class="fw-semibold mb-2 small text-muted">Quick Actions</div>
+        <div class="d-flex flex-wrap gap-2">${buttons.join("")}</div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Main order details card — upgraded with all 5 improvements
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderOrderDetailsCard(order, ui) {
+    const data        = get(order, ["data"], order) || {};
+    const orderNumber = get(data, ["order_number"]) || get(data, ["orderNumber"]) || get(data, ["order_id"]);
+    const status      = get(data, ["status"])       || get(data, ["order_status"]);
+    const customerId  = get(data, ["customer_id"])  || get(data, ["customerId"]);
+    const createdAt   = get(data, ["created_at"])   || get(data, ["createdAt"]);
+    const total       = get(data, ["order_total"])  || get(data, ["orderTotal"]);
+    const shipTo      = get(data, ["ship_to"])      || get(data, ["shipTo"]) || get(data, ["ship_to_address"]);
+    const billTo      = get(data, ["bill_to"])      || get(data, ["billTo"]) || get(data, ["bill_to_address"]);
+    const lines       = get(data, ["lines"])        || get(data, ["order_lines"]) || get(data, ["items"]) || [];
+    const events      = ui && ui.events ? ui.events : [];
+    const rawId       = "raw_" + Math.random().toString(16).slice(2);
+
+    return `
+      <div class="mt-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge text-bg-dark">Order</span>
+              <span class="fw-semibold">#${escapeHtml(fmt(orderNumber))}</span>
+            </div>
+            <div class="small text-muted">${escapeHtml(nowTime())}</div>
+          </div>
+
+          <div class="card-body">
+            <div class="row g-3">
+
+              <!-- IMPROVEMENT 2: Status stepper -->
+              <div class="col-12">
+                <div class="border rounded-3 p-3">
+                  <div class="fw-semibold mb-2">Shipment Status</div>
+                  ${renderStatusStepper(status)}
+                </div>
+              </div>
+
+              <!-- Summary -->
+              <div class="col-12 col-lg-6">
+                <div class="border rounded-3 p-3 h-100">
+                  <div class="fw-semibold mb-2">Summary</div>
+                  ${renderKeyValueRow("Order #", orderNumber)}
+                  ${renderKeyValueRow("Customer ID", customerId)}
+                  ${renderKeyValueRow("Total", total)}
+                  ${renderKeyValueRow("Created", createdAt)}
+                </div>
+              </div>
+
+              <!-- IMPROVEMENT 3: Addresses with verified badges -->
+              <div class="col-12 col-lg-6">
+                <div class="border rounded-3 p-3 h-100">
+                  <div class="fw-semibold mb-2">Addresses</div>
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6">${renderAddressVerified(shipTo, "Ship To")}</div>
+                    <div class="col-12 col-md-6">${renderAddressVerified(billTo, "Bill To")}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Line items -->
+              <div class="col-12">
+                <div class="border rounded-3 p-3">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="fw-semibold">Line Items</div>
+                    <span class="badge text-bg-light border">${Array.isArray(lines) ? lines.length : 0} items</span>
+                  </div>
+                  ${renderOrderLinesTable(lines)}
+                </div>
+              </div>
+
+              <!-- IMPROVEMENT 4: Inline timeline -->
+              ${events.length > 0 ? `<div class="col-12">${renderInlineTimeline(events)}</div>` : ""}
+
+              <!-- IMPROVEMENT 5: Action buttons -->
+              <div class="col-12">
+                ${renderActionButtons(orderNumber, status, shipTo)}
+              </div>
+
+              <!-- Raw JSON toggle -->
+              <div class="col-12">
+                <button class="btn btn-outline-secondary btn-sm" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#${rawId}">Toggle raw JSON</button>
+                <div class="collapse mt-2" id="${rawId}">
+                  <pre class="bg-light border rounded-3 p-3 small mb-0"
+                    style="max-height:260px;overflow:auto;">${escapeHtml(JSON.stringify(order, null, 2))}</pre>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Order created card (replacement + new orders)
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderOrderCreatedCard(order) {
+    const data        = (order && order.data) ? order.data : (order || {});
+    const orderNumber = fmt(data.order_number || data.orderNumber);
+    const status      = fmt(data.status);
+    const customerId  = fmt(data.customer_id  || data.customerId);
+    const createdAt   = fmt(data.created_at   || data.createdAt);
+    const lines       = data.lines || data.order_lines || [];
+    const rawId       = "raw_" + Math.random().toString(16).slice(2);
+    return `
+      <div class="mt-3">
+        <div class="card border-0 shadow-sm" style="border-left:4px solid #198754 !important;">
+          <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge text-bg-success">✓ Created</span>
+              <span class="fw-semibold">Order #${escapeHtml(orderNumber)}</span>
+            </div>
+            <div class="small text-muted">${escapeHtml(nowTime())}</div>
+          </div>
+          <div class="card-body">
+            <div class="row g-2 mb-3">
+              <div class="col-6">${renderKeyValueRow("Order #", orderNumber)}</div>
+              <div class="col-6">${renderKeyValueRow("Status", status)}</div>
+              <div class="col-6">${renderKeyValueRow("Customer", customerId)}</div>
+              <div class="col-6">${renderKeyValueRow("Created", createdAt)}</div>
+            </div>
+            ${renderStatusStepper(status)}
+            ${lines.length ? renderOrderLinesTable(lines) : ""}
+            ${renderActionButtons(orderNumber, status, null)}
+            <button class="btn btn-outline-secondary btn-sm mt-2" type="button"
+              data-bs-toggle="collapse" data-bs-target="#${rawId}">Toggle raw JSON</button>
+            <div class="collapse mt-2" id="${rawId}">
+              <pre class="bg-light border rounded-3 p-3 small mb-0"
+                style="max-height:220px;overflow:auto;">${escapeHtml(JSON.stringify(order, null, 2))}</pre>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Full timeline card (standalone, when agent explicitly asks for timeline)
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderTimelineCard(events, orderNumber) {
+    if (!Array.isArray(events) || events.length === 0)
+      return `<div class="mt-3 alert alert-secondary">No timeline events found for order ${escapeHtml(fmt(orderNumber))}.</div>`;
+    const rows = events.map(ev => {
+      const evType = fmt(ev.event_type || ev.eventType);
+      const badgeMap = {
+        ORDER_CREATED: "text-bg-secondary", STATUS_UPDATED: "text-bg-primary",
+        ADDRESS_UPDATED: "text-bg-info", REPLACEMENT_REQUESTED: "text-bg-warning",
+        REPLACEMENT_CREATED: "text-bg-success", CANCELLED: "text-bg-danger",
+      };
+      const badge = badgeMap[evType] || "text-bg-light border";
+      return `<tr>
+        <td class="text-muted small text-nowrap">${escapeHtml(fmt(ev.created_at || ev.createdAt))}</td>
+        <td><span class="badge ${badge}">${escapeHtml(evType)}</span></td>
+        <td class="small">${escapeHtml(fmt(ev.message))}</td>
+        <td class="small text-muted">${escapeHtml(fmt(ev.actor_username || ev.actor))}</td>
+      </tr>`;
+    }).join("");
+    return `
+      <div class="mt-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge text-bg-dark">Timeline</span>
+              <span class="fw-semibold">Order #${escapeHtml(fmt(orderNumber))}</span>
+            </div>
+            <span class="badge text-bg-light border">${events.length} events</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead class="table-light">
+                  <tr><th style="width:180px;">Time</th><th style="width:180px;">Event</th>
+                      <th>Message</th><th style="width:120px;">Actor</th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Orders grid card
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderOrdersGridCard(ui) {
+    const items  = Array.isArray(ui.items) ? ui.items : [];
+    const count  = ui.count  || items.length;
+    const q      = ui.q      || "";
+    const status = ui.status || "";
+    const subtitle = [q ? `matching "${q}"` : "", status ? `status: ${status}` : ""]
+      .filter(Boolean).join(", ") || "all orders";
+    if (items.length === 0)
+      return `<div class="mt-3 alert alert-secondary">No orders found (${escapeHtml(subtitle)}).</div>`;
+    const statusBadge = s => {
+      const map = { CREATED:"text-bg-secondary", PAID:"text-bg-info", FULFILLING:"text-bg-primary",
+                    SHIPPED:"text-bg-warning", DELIVERED:"text-bg-success",
+                    CANCELLED:"text-bg-danger", CLOSED:"text-bg-dark" };
+      return `<span class="badge ${map[s]||"text-bg-light border"}">${escapeHtml(s||"—")}</span>`;
+    };
+    const rows = items.map(r => {
+      const on = r.order_number || "";
+      const lookupPrompt = `Lookup order #${on}.`;
+      return `<tr style="cursor:pointer;" onclick="window._prefill(${JSON.stringify(lookupPrompt)})">
+        <td class="fw-semibold text-primary">${escapeHtml(fmt(on))}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td class="small text-muted">${escapeHtml(fmt(r.customer_id||r.customerId))}</td>
+        <td class="small text-end">${escapeHtml(fmt(r.order_total))}</td>
+        <td class="small text-muted text-nowrap">${escapeHtml(fmt(r.created_at||r.createdAt))}</td>
+      </tr>`;
+    }).join("");
+    return `
+      <div class="mt-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge text-bg-dark">Orders</span>
+              <span class="fw-semibold text-capitalize">${escapeHtml(subtitle)}</span>
+            </div>
+            <span class="badge text-bg-light border">${count} result${count!==1?"s":""}</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="small text-muted px-3 pt-2 pb-1">Click any row to look up that order.</div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr><th>Order #</th><th>Status</th><th>Customer</th>
+                      <th class="text-end">Total</th><th>Created</th></tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Order action confirmation card
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderOrderActionCard(ui) {
+    const labels = {
+      cancelled:           { badge:"text-bg-danger",  icon:"✕", label:"Cancelled" },
+      status_updated:      { badge:"text-bg-primary", icon:"↑", label:"Status Updated" },
+      address_updated:     { badge:"text-bg-info",    icon:"📍", label:"Address Updated" },
+      replacement_created: { badge:"text-bg-success", icon:"↺", label:"Replacement Created" },
+    };
+    const cfg = labels[ui.action] || { badge:"text-bg-secondary", icon:"✓", label:"Done" };
+    const orderNum = ui.order_number ? ` — Order #${escapeHtml(ui.order_number)}` : "";
+    const extra    = ui.status ? renderKeyValueRow("New Status", ui.status) : "";
+    // Offer a follow-up lookup button
+    const lookupBtn = ui.order_number
+      ? `<button class="btn btn-outline-secondary btn-sm mt-2"
+           onclick="window._prefill('Lookup order #${ui.order_number}.')">🔍 Look up order</button>` : "";
+    return `
+      <div class="mt-3">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 d-flex align-items-center gap-2">
+            <span class="badge ${cfg.badge}">${cfg.icon} ${cfg.label}</span>
+            <span class="fw-semibold">${orderNum}</span>
+          </div>
+          ${(extra || lookupBtn) ? `<div class="card-body">${extra}${lookupBtn}</div>` : ""}
+        </div>
+      </div>`;
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Audit trail card
+  // Shows every tool call made in this turn: action name, outcome badge,
+  // timestamp, and error detail. Always appended after the main rich card.
+  // Collapsed by default on success; expanded automatically on any ERROR.
+  // ─────────────────────────────────────────────────────────────────────────
+  function renderAuditTrailCard(actionsTaken, errors, correlationId) {
+    if (!Array.isArray(actionsTaken) || actionsTaken.length === 0) return "";
+
+    const hasErrors = Array.isArray(errors) && errors.length > 0;
+    const collapseId = "audit_" + Math.random().toString(16).slice(2);
+
+    const outcomeMap = {
+      OK:     { badge: "text-bg-success", icon: "✓" },
+      DENIED: { badge: "text-bg-warning text-dark", icon: "✕" },
+      ERROR:  { badge: "text-bg-danger",  icon: "✕" },
+    };
+
+    // Build one row per action
+    const rows = actionsTaken.map((a, idx) => {
+      // Match to an error by action name if present
+      const err = Array.isArray(errors)
+        ? errors.find(e => e.action === a.action) : null;
+
+      const outcome   = a.outcome === "ERROR" ? "ERROR"
+                      : err ? (err.status === 409 ? "DENIED" : "ERROR") : "OK";
+      const cfg       = outcomeMap[outcome] || outcomeMap.OK;
+      const label     = String(a.action || "").replace(/_/g, " ");
+      const ts        = a.timestamp ? escapeHtml(a.timestamp) : "—";
+      const idem      = a.idempotent ? ' <span class="badge text-bg-secondary ms-1" style="font-size:0.6rem;">idempotent</span>' : "";
+
+      // Extract the most human-readable error message available
+      function extractErrMsg(e) {
+        if (!e) return null;
+        const p = e.payload || {};
+        const up = (typeof p === "object" && p.upstream) ? p.upstream : p;
+        return (typeof up === "object" && (up.message || up.error))
+          || (typeof p === "object" && (p.message || p.error))
+          || e.error
+          || JSON.stringify(p, null, 0).slice(0, 200);
+      }
+      const errMsg = extractErrMsg(err);
+
+      // Error detail row (shown inline under the action row)
+      const errDetail = (err || a.outcome === "ERROR") ? `
+        <tr style="background:#fff5f5;">
+          <td colspan="4" class="small text-danger ps-3 pb-2" style="border-top:none;">
+            ⚠ ${escapeHtml(String(errMsg || a.error || "Unknown error").slice(0, 300))}
+          </td>
+        </tr>` : "";
+
+      return `
+        <tr>
+          <td><span class="badge ${cfg.badge}">${cfg.icon} ${escapeHtml(outcome)}</span></td>
+          <td class="fw-semibold small text-capitalize">${escapeHtml(label)}${idem}</td>
+          <td class="small text-muted">${ts}</td>
+          <td class="small text-muted font-monospace" style="font-size:0.7rem;">${
+            escapeHtml(String(correlationId || "").slice(0,12)) + "…"
+          }</td>
+        </tr>${errDetail}`;
+    }).join("");
+
+    // If there are errors with no matching action (e.g. resolve_address errors), add them
+    const unmatchedErrors = (errors || []).filter(e =>
+      !actionsTaken.some(a => a.action === e.action)
+    );
+    const unmatchedRows = unmatchedErrors.map(err => `
+      <tr style="background:#fff5f5;">
+        <td><span class="badge text-bg-danger">✕ ERROR</span></td>
+        <td class="fw-semibold small text-capitalize">${escapeHtml(String(err.action || "unknown").replace(/_/g, " "))}</td>
+        <td class="small text-muted">—</td>
+        <td class="small text-muted">—</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td colspan="4" class="small text-danger ps-3" style="border-top:none;">
+          ${escapeHtml(JSON.stringify(err.payload || err.error || err, null, 0).slice(0, 300))}
+        </td>
+      </tr>`).join("");
+
+    const headerBadge = hasErrors
+      ? `<span class="badge text-bg-danger ms-2">${errors.length} error${errors.length > 1 ? "s" : ""}</span>`
+      : `<span class="badge text-bg-success ms-2">${actionsTaken.length} step${actionsTaken.length > 1 ? "s" : ""}</span>`;
+
+    return `
+      <div class="mt-2">
+        <div class="card border-0" style="border-left: 3px solid ${hasErrors ? "#dc3545" : "#198754"} !important;">
+          <div class="card-header bg-white border-0 py-2 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-1">
+              <span class="small fw-semibold text-muted">Audit Trail</span>
+              ${headerBadge}
+            </div>
+            <button class="btn btn-outline-secondary btn-sm py-0 px-2" type="button"
+              data-bs-toggle="collapse" data-bs-target="#${collapseId}" style="font-size:0.75rem;">
+              ${hasErrors ? "Show errors ▾" : "Details ▾"}
+            </button>
+          </div>
+          <div class="collapse${hasErrors ? " show" : ""}" id="${collapseId}">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0" style="font-size:0.8rem;">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:100px;">Outcome</th>
+                      <th>Action</th>
+                      <th style="width:140px;">Time</th>
+                      <th style="width:110px;">Corr-ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}${unmatchedRows}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // addMessage — renders a chat bubble with optional rich HTML block
+  // ─────────────────────────────────────────────────────────────────────────
+  function addMessage({ role, title, text, meta, variant, richHtml }) {
+    emptyState.classList.add("d-none");
+    const isUser = variant === "user";
+    const outer  = document.createElement("div");
+    outer.className = "d-flex " + (isUser ? "justify-content-end" : "justify-content-start");
+
+    const bubble = document.createElement("div");
+    bubble.className = "card border-0 shadow-sm";
+    bubble.style.cssText = `max-width:880px;width:100%;border-radius:14px;
+      background:${isUser?"rgba(13,110,253,0.03)":"rgba(25,135,84,0.03)"};
+      margin-left:${isUser?"120px":"0"};margin-right:${isUser?"0":"120px"};`;
+
+    const header = document.createElement("div");
+    header.className = "card-header bg-white border-0 d-flex align-items-center justify-content-between py-2";
+    const left = document.createElement("div");
+    left.className = "d-flex align-items-center gap-2";
+    const badge = document.createElement("span");
+    badge.className = "badge " + (isUser ? "text-bg-primary" : "text-bg-success");
+    badge.textContent = role;
+    const hTitle = document.createElement("span");
+    hTitle.className = "fw-semibold";
+    hTitle.textContent = title;
+    left.appendChild(badge); left.appendChild(hTitle);
+    const right = document.createElement("div");
+    right.className = "small text-muted";
+    right.textContent = meta || nowTime();
+    header.appendChild(left); header.appendChild(right);
+
+    const body = document.createElement("div");
+    body.className = "card-body py-3";
+    const p = document.createElement("div");
+    p.className = "mb-0";
+    p.style.cssText = "white-space:pre-wrap;word-break:break-word;";
+    p.innerHTML = escapeHtml(text || "");
+    body.appendChild(p);
+    if (richHtml) {
+      const rich = document.createElement("div");
+      rich.innerHTML = richHtml;
+      body.appendChild(rich);
+    }
+    bubble.appendChild(header); bubble.appendChild(body);
+    outer.appendChild(bubble);
+    chatLog.appendChild(outer);
+    scrollToBottom();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Network
+  // ─────────────────────────────────────────────────────────────────────────
+  async function postWithTimeout(url, payload, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      const contentType = resp.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const data = isJson ? await resp.json() : await resp.text();
+      if (!resp.ok) {
+        const msg = isJson ? (data.error || data.message || JSON.stringify(data)) : (data || `HTTP ${resp.status}`);
+        throw new Error(msg);
+      }
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function extractReply(data) {
+    if (!data) return "";
+    if (typeof data === "string") return data;
+    return data.reply || data.answer || data.message || data.response || data.question ||
+      (data.result && (data.result.reply || data.result.answer)) || JSON.stringify(data, null, 2);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // sendMessage — routes ui.view to the right render function
+  // ─────────────────────────────────────────────────────────────────────────
+  async function sendMessage() {
+    clearError();
+    const text = (promptEl.value || "").trim();
+    if (!text) return;
+    const url = (workflowUrl.value || "").trim();
+    if (!url) { showError("Workflow endpoint is empty."); return; }
+    const timeoutMs = Math.max(1000, parseInt(timeoutMsEl.value || "45000", 10));
+
+    addMessage({ role: "You", title: "User prompt", text, variant: "user" });
+    promptEl.value = ""; charCount.textContent = "0";
+    setBusy(true, "Calling workflow...");
+    scrollToBottom();
+
+    try {
+      const data         = await postWithTimeout(url, { message: text }, timeoutMs);
+      const replyText    = extractReply(data);
+      const ui           = (data && data.ui)           ? data.ui           : {};
+      const order        = (data && data.order)        ? data.order        : null;
+      const createdOrder = (data && data.created_order)? data.created_order: null;
+      const entities     = (data && data.entities)     ? data.entities     : {};
+
+      let richHtml = "";
+
+      if (ui.view === "order_details" && order) {
+        // Pass any timeline events that may have been co-fetched
+        if (ui.events) order._inlineEvents = ui.events;
+        richHtml = renderOrderDetailsCard(order, ui);
+
+      } else if (ui.view === "order_created" && createdOrder) {
+        richHtml = renderOrderCreatedCard(createdOrder);
+
+      } else if (ui.view === "order_timeline") {
+        richHtml = renderTimelineCard(ui.events || [], entities.order_number || "");
+
+      } else if (ui.view === "orders_grid") {
+        richHtml = renderOrdersGridCard(ui);
+
+      } else if (ui.view === "order_action") {
+        richHtml = renderOrderActionCard(ui);
+      }
+
+      // Append audit trail to every agent response
+      const actionsTaken = data && data.actions_taken ? data.actions_taken : [];
+      const errors       = data && data.errors        ? data.errors        : [];
+      const corrId       = data && data.correlation_id ? data.correlation_id : "";
+      const auditHtml    = renderAuditTrailCard(actionsTaken, errors, corrId);
+      richHtml = richHtml + auditHtml;
+
+      addMessage({
+        role: "Agent", title: "Workflow response",
+        text: replyText || "(No response text returned.)",
+        variant: "assistant", richHtml,
+      });
+      setBusy(false, "Done");
+
+    } catch (e) {
+      setBusy(false, "Failed");
+      showError(e?.message || "Request failed.");
+      addMessage({ role: "System", title: "Error",
+        text: `Request failed: ${e?.message || "Unknown error"}`, variant: "assistant" });
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Event listeners
+  // ─────────────────────────────────────────────────────────────────────────
+  promptEl.addEventListener("input", () => { charCount.textContent = String(promptEl.value.length); });
+  promptEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendMessage(); }
+  });
+  chatForm.addEventListener("submit", (e) => { e.preventDefault(); sendMessage(); });
+  btnClear.addEventListener("click", () => {
+    chatLog.innerHTML = ""; emptyState.classList.remove("d-none");
+    clearError(); statusLine.textContent = "Idle"; promptEl.focus();
+  });
+  btnExample.addEventListener("click", () => {
+    prefillPrompt("Lookup order #88421.");
+  });
+
+  promptEl.focus();
+})();
+</script>
+
+{% endblock %}

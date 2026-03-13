@@ -1,0 +1,54 @@
+requirements.txt
+
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+mysqlclient==2.2.4
+python-dotenv==1.0.1
+requests==2.32.3
+PyJWT==2.9.0
+cryptography==43.0.1
+pydantic==2.8.2
+
+sqlalchemy
+
+wsgi.py
+
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env BEFORE importing app modules/config
+project_root = Path(__file__).resolve().parent
+env_path = project_root / ".env"
+load_dotenv(dotenv_path=env_path, override=False)
+
+from app import create_app  # noqa: E402
+
+app = create_app()
+
+
+project structure
+
+cs-orders-api
+    .venv
+    app
+        auth
+        errors
+        models
+        repositories
+        routes
+        services
+        __init__.py
+        config.py
+        __init__.py
+        db_config.py
+        extensions.py
+        tenancy.py
+
+    tests
+
+
+
+
+
+

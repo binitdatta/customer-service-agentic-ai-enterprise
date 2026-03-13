@@ -1,0 +1,8 @@
+Flask==3.0.3
+python-dotenv==1.0.1
+requests==2.32.3
+pydantic==2.7.4
+PyJWT==2.9.0
+cryptography==42.0.8
+
+langgraph==0.2.35

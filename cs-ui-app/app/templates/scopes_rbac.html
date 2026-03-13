@@ -1,0 +1,674 @@
+{# templates/scopes_rbac.html #}
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="mb-1">Scopes & RBAC</h1>
+      <div class="text-muted">
+        Keycloak realm: <span class="badge text-bg-primary">cs-triage</span>
+        <span class="ms-2">|</span>
+        <span class="ms-2">Keycloak version: <span class="badge text-bg-secondary">26.2.5</span></span>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('ui.home') }}">
+        <i class="bi bi-arrow-left"></i> Home
+      </a>
+      <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#kcJsonModal">
+        <i class="bi bi-braces"></i> View Realm Export (snippet)
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small">Realm Roles</div>
+              <div class="display-6 mb-0">11</div>
+            </div>
+            <div class="rounded-3 p-3 bg-body-tertiary">
+              <i class="bi bi-shield-lock fs-4"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">Includes: order_read, order_write, ticket_write, workflow_user…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small">Groups</div>
+              <div class="display-6 mb-0">2</div>
+            </div>
+            <div class="rounded-3 p-3 bg-body-tertiary">
+              <i class="bi bi-people fs-4"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">support-agents group grants order_read/order_write/ticket_write.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small">Clients</div>
+              <div class="display-6 mb-0">8</div>
+            </div>
+            <div class="rounded-3 p-3 bg-body-tertiary">
+              <i class="bi bi-boxes fs-4"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">Key apps: cs-ui, cs-orders-api, cs-workflow-api.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small">Client Scopes</div>
+              <div class="display-6 mb-0">13</div>
+            </div>
+            <div class="rounded-3 p-3 bg-body-tertiary">
+              <i class="bi bi-bounding-box-circles fs-4"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">Includes aud-cs-orders-api, cs-audiences, orders-read, roles…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search / Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-lg-6">
+          <label class="form-label small text-muted mb-1" for="filterText">Search</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input id="filterText" class="form-control" placeholder="Type: role, scope, client, group (e.g., order_read, aud-cs-orders-api, cs-ui)" />
+            <button class="btn btn-outline-secondary" type="button" id="clearFilter">Clear</button>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <label class="form-label small text-muted mb-1" for="filterType">Quick filter</label>
+          <select id="filterType" class="form-select">
+            <option value="all" selected>All sections</option>
+            <option value="roles">Realm Roles</option>
+            <option value="groups">Groups</option>
+            <option value="clients">Clients</option>
+            <option value="scopes">Client Scopes</option>
+            <option value="svc">Service Accounts</option>
+            <option value="mappings">Scope Mappings</option>
+          </select>
+        </div>
+      </div>
+      <div class="small text-muted mt-3">
+        Tip: This view helps you validate “what’s in the token” (scopes, audiences) vs “what the API enforces” (roles/RBAC).
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="accordion" id="scopesRbacAccordion">
+
+    <!-- Realm Roles -->
+    <div class="accordion-item" data-section="roles">
+      <h2 class="accordion-header" id="hdrRoles">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRoles" aria-expanded="true">
+          <i class="bi bi-shield-check me-2"></i> Realm Roles (RBAC)
+        </button>
+      </h2>
+      <div id="collapseRoles" class="accordion-collapse collapse show" data-bs-parent="#scopesRbacAccordion">
+        <div class="accordion-body">
+          <p class="text-muted mb-3">
+            These are realm-level roles used by your APIs and agentic workflow to authorize actions.
+          </p>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle" id="tblRoles">
+              <thead>
+                <tr class="text-muted">
+                  <th>Role</th>
+                  <th>Description</th>
+                  <th>Common Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>order_read</code></td><td>order_read</td><td>GET order status / details</td></tr>
+                <tr><td><code>order_write</code></td><td>order_write</td><td>Update order attributes</td></tr>
+                <tr><td><code>order_address_update</code></td><td>order_address_update</td><td>PATCH shipping address</td></tr>
+                <tr><td><code>order_status_update</code></td><td>order_status_update</td><td>Update fulfillment/status</td></tr>
+                <tr><td><code>replacement_create</code></td><td>replacement_create</td><td>Create replacement order</td></tr>
+                <tr><td><code>order_replace</code></td><td>order_replace</td><td>Replacement workflow permission</td></tr>
+                <tr><td><code>ticket_write</code></td><td>ticket_write</td><td>Create support ticket</td></tr>
+                <tr><td><code>workflow</code></td><td>workflow</td><td>Agent/workflow execution</td></tr>
+                <tr><td><code>workflow_user</code></td><td>workflow_user</td><td>User-level workflow access</td></tr>
+                <tr><td><code>ui_user</code></td><td>ui_user</td><td>UI access / menus</td></tr>
+                <tr><td><code>default-roles-cs-triage</code></td><td>Composite default role</td><td>Includes offline_access + uma_authorization + account roles</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="alert alert-info mb-0">
+            <div class="d-flex gap-2">
+              <i class="bi bi-info-circle mt-1"></i>
+              <div>
+                <div class="fw-semibold">Practical enforcement pattern</div>
+                <div class="small">
+                  - APIs enforce <code>realm_access.roles</code> (e.g., <code>order_read</code>)<br/>
+                  - UI uses <code>ui_user</code> for menus and page access<br/>
+                  - Workflow agent uses <code>workflow</code>/<code>workflow_user</code> to guard “Act” steps
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Groups -->
+    <div class="accordion-item" data-section="groups">
+      <h2 class="accordion-header" id="hdrGroups">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGroups">
+          <i class="bi bi-people-fill me-2"></i> Groups → Role Grants
+        </button>
+      </h2>
+      <div id="collapseGroups" class="accordion-collapse collapse" data-bs-parent="#scopesRbacAccordion">
+        <div class="accordion-body">
+          <p class="text-muted mb-3">
+            Group-based authorization is the cleanest way to assign support capabilities.
+          </p>
+
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="card border-0 bg-body-tertiary">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="fw-semibold"><i class="bi bi-person-badge me-1"></i> support-agents</div>
+                      <div class="text-muted small">Realm roles granted:</div>
+                    </div>
+                    <span class="badge text-bg-success">Primary</span>
+                  </div>
+                  <div class="mt-3 d-flex flex-wrap gap-2">
+                    <span class="badge text-bg-dark"><code>order_read</code></span>
+                    <span class="badge text-bg-dark"><code>order_write</code></span>
+                    <span class="badge text-bg-dark"><code>ticket_write</code></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card border-0 bg-body-tertiary">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <div class="fw-semibold"><i class="bi bi-gear-wide-connected me-1"></i> ops-admin</div>
+                      <div class="text-muted small">Realm roles granted:</div>
+                    </div>
+                    <span class="badge text-bg-secondary">Empty</span>
+                  </div>
+                  <div class="mt-3 text-muted small">No explicit realm roles assigned in export.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4"/>
+
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                  <div class="fw-semibold mb-2">Recommended: Tiered support model</div>
+                  <ul class="small text-muted mb-0">
+                    <li><code>support-agent</code>: order_read, ticket_write</li>
+                    <li><code>support-senior</code>: + order_write, order_status_update</li>
+                    <li><code>support-ops</code>: + order_address_update, replacement_create</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                  <div class="fw-semibold mb-2">Guardrail idea for your Agent</div>
+                  <div class="small text-muted">
+                    In your LangGraph “Policy” state, enforce:
+                    <ul class="mb-0">
+                      <li>No replacement creation unless role <code>replacement_create</code> present</li>
+                      <li>No address updates unless <code>order_address_update</code> present</li>
+                      <li>Always allow read-only diagnostics with <code>order_read</code></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Client Scopes -->
+    <div class="accordion-item" data-section="scopes">
+      <h2 class="accordion-header" id="hdrScopes">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseScopes">
+          <i class="bi bi-bounding-box me-2"></i> Client Scopes (OIDC)
+        </button>
+      </h2>
+      <div id="collapseScopes" class="accordion-collapse collapse" data-bs-parent="#scopesRbacAccordion">
+        <div class="accordion-body">
+
+          <div class="alert alert-warning">
+            <div class="d-flex gap-2">
+              <i class="bi bi-exclamation-triangle mt-1"></i>
+              <div class="small">
+                In this realm export, most custom client scopes have <code>include.in.token.scope=false</code>.
+                That means they mainly add <em>claims</em> (audiences/roles) rather than appearing as a literal “scope string”.
+                Your RBAC still works because roles are emitted via the <code>roles</code> client scope mappers.
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle" id="tblScopes">
+              <thead>
+                <tr class="text-muted">
+                  <th>Client Scope</th>
+                  <th>Purpose</th>
+                  <th>Notable Mappers / Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>roles</code></td>
+                  <td>Emit realm + client roles into token</td>
+                  <td>Realm roles mapper → <code>realm_access.roles</code>; Client roles mapper → <code>resource_access.${client_id}.roles</code></td>
+                </tr>
+                <tr>
+                  <td><code>cs-audiences</code></td>
+                  <td>Add audiences for cs-orders-api and cs-workflow-api</td>
+                  <td>Audience mappers include <code>cs-workflow-api</code> and custom audience <code>cs-orders-api</code></td>
+                </tr>
+                <tr>
+                  <td><code>aud-cs-orders-api</code></td>
+                  <td>Add <code>aud</code> = cs-orders-api</td>
+                  <td>Lightweight claim enabled</td>
+                </tr>
+                <tr>
+                  <td><code>aud-cs-workflow-api</code></td>
+                  <td>Add <code>aud</code> = cs-workflow-api</td>
+                  <td>Included in defaults (realm-level)</td>
+                </tr>
+                <tr>
+                  <td><code>orders-read</code></td>
+                  <td>Domain scope label for “read” access</td>
+                  <td>Configured for consent display; not necessarily included in token scope string</td>
+                </tr>
+                <tr>
+                  <td><code>service_account</code></td>
+                  <td>Service-account helper claims</td>
+                  <td>Adds session notes: clientHost, clientAddress, client_id</td>
+                </tr>
+                <tr>
+                  <td><code>offline_access</code></td>
+                  <td>Refresh token / offline sessions</td>
+                  <td>Optional scope; mapping exists to role <code>offline_access</code></td>
+                </tr>
+                <tr>
+                  <td><code>profile</code>, <code>email</code>, <code>address</code>, <code>phone</code></td>
+                  <td>Standard OIDC scopes</td>
+                  <td>Emit user identity claims</td>
+                </tr>
+                <tr>
+                  <td><code>organization</code></td>
+                  <td>Org claims scope</td>
+                  <td>Configured but organizationsEnabled=false in realm settings</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4">
+            <div class="fw-semibold mb-2">Realm-level default scopes</div>
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge text-bg-secondary"><code>profile</code></span>
+              <span class="badge text-bg-secondary"><code>email</code></span>
+              <span class="badge text-bg-secondary"><code>roles</code></span>
+              <span class="badge text-bg-secondary"><code>web-origins</code></span>
+              <span class="badge text-bg-secondary"><code>acr</code></span>
+              <span class="badge text-bg-secondary"><code>basic</code></span>
+              <span class="badge text-bg-secondary"><code>cs-audiences</code></span>
+              <span class="badge text-bg-secondary"><code>aud-cs-orders-api</code></span>
+              <span class="badge text-bg-secondary"><code>orders-read</code></span>
+              <span class="badge text-bg-secondary"><code>aud-cs-workflow-api</code></span>
+              <span class="badge text-bg-secondary"><code>role_list</code></span>
+              <span class="badge text-bg-secondary"><code>saml_organization</code></span>
+            </div>
+
+            <div class="fw-semibold mt-3 mb-2">Realm-level optional scopes</div>
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge text-bg-light border"><code>offline_access</code></span>
+              <span class="badge text-bg-light border"><code>address</code></span>
+              <span class="badge text-bg-light border"><code>phone</code></span>
+              <span class="badge text-bg-light border"><code>microprofile-jwt</code></span>
+              <span class="badge text-bg-light border"><code>organization</code></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Clients -->
+    <div class="accordion-item" data-section="clients">
+      <h2 class="accordion-header" id="hdrClients">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseClients">
+          <i class="bi bi-diagram-3 me-2"></i> Clients → Scopes (who receives what)
+        </button>
+      </h2>
+      <div id="collapseClients" class="accordion-collapse collapse" data-bs-parent="#scopesRbacAccordion">
+        <div class="accordion-body">
+          <p class="text-muted mb-3">
+            These are the important client entries from the export and what scopes they receive by default.
+          </p>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle" id="tblClients">
+              <thead>
+                <tr class="text-muted">
+                  <th>Client</th>
+                  <th>Type</th>
+                  <th>Default Client Scopes</th>
+                  <th>Optional</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>cs-ui</code></td>
+                  <td><span class="badge text-bg-info">public</span></td>
+                  <td><code>profile</code>, <code>email</code>, <code>roles</code>, <code>cs-audiences</code>, <code>basic</code>, <code>acr</code>, <code>web-origins</code></td>
+                  <td><code>offline_access</code>, <code>organization</code>, <code>microprofile-jwt</code></td>
+                </tr>
+                <tr>
+                  <td><code>cs-orders-api</code></td>
+                  <td><span class="badge text-bg-dark">confidential</span> + <span class="badge text-bg-success">service account</span></td>
+                  <td><code>service_account</code>, <code>roles</code>, <code>cs-audiences</code>, <code>aud-cs-orders-api</code>, <code>orders-read</code>, <code>email</code></td>
+                  <td><code>offline_access</code>, <code>microprofile-jwt</code>, <code>organization</code></td>
+                </tr>
+                <tr>
+                  <td><code>cs-workflow-api</code></td>
+                  <td><span class="badge text-bg-dark">confidential</span> + <span class="badge text-bg-success">service account</span></td>
+                  <td><code>service_account</code>, <code>roles</code>, <code>cs-audiences</code>, <code>aud-cs-workflow-api</code>, <code>aud-cs-orders-api</code>, <code>email</code></td>
+                  <td><code>offline_access</code>, <code>microprofile-jwt</code>, <code>organization</code></td>
+                </tr>
+                <tr>
+                  <td><code>broker</code></td>
+                  <td><span class="badge text-bg-secondary">bearer-only</span></td>
+                  <td><code>roles</code>, standard defaults</td>
+                  <td>n/a</td>
+                </tr>
+                <tr>
+                  <td><code>realm-management</code></td>
+                  <td><span class="badge text-bg-secondary">bearer-only</span></td>
+                  <td>Admin / realm management roles</td>
+                  <td>n/a</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="alert alert-info mb-0">
+            <div class="small">
+              For your APIs: if you validate <code>aud</code>, make sure the token includes the right audience.
+              Your realm uses both <code>aud-cs-*</code> scopes and <code>cs-audiences</code> mappers to ensure that.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service accounts -->
+    <div class="accordion-item" data-section="svc">
+      <h2 class="accordion-header" id="hdrSvc">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSvc">
+          <i class="bi bi-robot me-2"></i> Service Accounts → Granted Roles
+        </button>
+      </h2>
+      <div id="collapseSvc" class="accordion-collapse collapse" data-bs-parent="#scopesRbacAccordion">
+        <div class="accordion-body">
+          <p class="text-muted mb-3">
+            These are the machine identities used by your microservices for tool calls / internal orchestration.
+          </p>
+
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="fw-semibold">
+                      <i class="bi bi-cpu me-1"></i> service-account-cs-orders-api
+                    </div>
+                    <span class="badge text-bg-success">enabled</span>
+                  </div>
+                  <div class="text-muted small mt-2">Realm roles:</div>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="badge text-bg-dark"><code>order_read</code></span>
+                    <span class="badge text-bg-dark"><code>order_write</code></span>
+                    <span class="badge text-bg-dark"><code>replacement_create</code></span>
+                    <span class="badge text-bg-dark"><code>ticket_write</code></span>
+                    <span class="badge text-bg-secondary"><code>default-roles-cs-triage</code></span>
+                  </div>
+                  <div class="small text-muted mt-3">
+                    Great for “Action Agent” steps: create replacement, open ticket, read/update orders.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="fw-semibold">
+                      <i class="bi bi-cpu me-1"></i> service-account-cs-workflow-api
+                    </div>
+                    <span class="badge text-bg-success">enabled</span>
+                  </div>
+                  <div class="text-muted small mt-2">Realm roles:</div>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="badge text-bg-dark"><code>order_read</code></span>
+                    <span class="badge text-bg-dark"><code>order_write</code></span>
+                    <span class="badge text-bg-dark"><code>replacement_create</code></span>
+                    <span class="badge text-bg-dark"><code>ticket_write</code></span>
+                    <span class="badge text-bg-secondary"><code>default-roles-cs-triage</code></span>
+                  </div>
+                  <div class="small text-muted mt-3">
+                    Suitable as an orchestrator identity for LangGraph workflow execution.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4"/>
+
+          <div class="card border-0 bg-body-tertiary">
+            <div class="card-body">
+              <div class="fw-semibold mb-1">Hardening suggestion</div>
+              <div class="small text-muted">
+                If you want stricter least-privilege, split roles so workflow-api has <code>order_read</code>/<code>ticket_write</code>,
+                and only a dedicated “orders-writer” client has <code>order_write</code>/<code>replacement_create</code>.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Scope mappings -->
+    <div class="accordion-item" data-section="mappings">
+      <h2 class="accordion-header" id="hdrMappings">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMappings">
+          <i class="bi bi-link-45deg me-2"></i> Scope Mappings (scope → roles)
+        </button>
+      </h2>
+      <div id="collapseMappings" class="accordion-collapse collapse" data-bs-parent="#scopesRbacAccordion">
+        <div class="accordion-body">
+          <p class="text-muted mb-3">
+            Scope mappings connect a client scope to one or more roles. In your export, one mapping is explicit:
+          </p>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle" id="tblMappings">
+              <thead>
+                <tr class="text-muted">
+                  <th>Client Scope</th>
+                  <th>Mapped Roles</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>offline_access</code></td>
+                  <td><code>offline_access</code></td>
+                  <td>Enables offline refresh token behavior when requested/allowed.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="alert alert-secondary mb-0">
+            <div class="small">
+              If you want “domain scopes” like <code>orders-read</code> to imply roles (e.g., <code>order_read</code>),
+              add scope mappings for them as well. Otherwise, keep RBAC purely role-driven and treat scopes as “token shape”.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /accordion -->
+</div><!-- /container -->
+
+<!-- Modal: Realm export snippet -->
+<div class="modal fade" id="kcJsonModal" tabindex="-1" aria-labelledby="kcJsonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="kcJsonModalLabel"><i class="bi bi-braces"></i> realm-export.json (selected highlights)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-end mb-2">
+          <button class="btn btn-sm btn-outline-primary" type="button" data-copy-target="#kcSnippet">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <pre class="bg-body-tertiary p-3 rounded border small mb-0"><code id="kcSnippet">{
+  "realm": "cs-triage",
+  "keycloakVersion": "26.2.5",
+  "groups": [
+    {"name": "support-agents", "realmRoles": ["order_write","order_read","ticket_write"]},
+    {"name": "ops-admin", "realmRoles": []}
+  ],
+  "users": [
+    {"username":"service-account-cs-orders-api","realmRoles":["order_write","replacement_create","order_read","ticket_write"]},
+    {"username":"service-account-cs-workflow-api","realmRoles":["order_write","replacement_create","order_read","ticket_write"]}
+  ],
+  "defaultDefaultClientScopes": ["profile","email","roles","cs-audiences","aud-cs-orders-api","orders-read","aud-cs-workflow-api"]
+}</code></pre>
+        <div class="small text-muted mt-2">
+          Source: your uploaded export file.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const filterText = document.getElementById("filterText");
+  const filterType = document.getElementById("filterType");
+  const clearBtn = document.getElementById("clearFilter");
+
+  function norm(s){ return (s || "").toLowerCase().trim(); }
+
+  function applyFilter() {
+    const q = norm(filterText.value);
+    const t = filterType.value;
+
+    // Section visibility
+    document.querySelectorAll("[data-section]").forEach(el => {
+      const section = el.getAttribute("data-section");
+      const show = (t === "all" || t === section);
+      el.style.display = show ? "" : "none";
+    });
+
+    // Row filtering
+    const tables = ["tblRoles","tblScopes","tblClients","tblMappings"];
+    tables.forEach(id => {
+      const tbl = document.getElementById(id);
+      if (!tbl) return;
+      tbl.querySelectorAll("tbody tr").forEach(tr => {
+        const text = norm(tr.innerText);
+        tr.style.display = (!q || text.includes(q)) ? "" : "none";
+      });
+    });
+  }
+
+  filterText?.addEventListener("input", applyFilter);
+  filterType?.addEventListener("change", applyFilter);
+  clearBtn?.addEventListener("click", () => { filterText.value=""; filterType.value="all"; applyFilter(); });
+
+  // Copy buttons
+  document.querySelectorAll("[data-copy-target]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const sel = btn.getAttribute("data-copy-target");
+      const el = document.querySelector(sel);
+      if (!el) return;
+      try {
+        await navigator.clipboard.writeText(el.innerText);
+        btn.classList.remove("btn-outline-primary");
+        btn.classList.add("btn-success");
+        btn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+        setTimeout(() => {
+          btn.classList.remove("btn-success");
+          btn.classList.add("btn-outline-primary");
+          btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+        }, 1200);
+      } catch(e) {
+        console.warn("Copy failed", e);
+      }
+    });
+  });
+
+  applyFilter();
+})();
+</script>
+
+{% endblock %}

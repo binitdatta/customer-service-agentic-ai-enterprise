@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="py-5 bg-dark text-light rounded-4 shadow-sm mb-5">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <h1 class="display-5 fw-bold">Retrieval-Augmented Generation (RAG)</h1>
+        <p class="lead text-secondary">
+          Grounding Large Language Models with external knowledge for accurate,
+          enterprise-grade AI applications.
+        </p>
+        <div class="mt-4">
+          <span class="badge bg-primary me-2">LLMs</span>
+          <span class="badge bg-success me-2">Vector Search</span>
+          <span class="badge bg-warning text-dark me-2">Embeddings</span>
+          <span class="badge bg-info text-dark">Enterprise AI</span>
+        </div>
+      </div>
+     <div class="text-center">
+           <i class="bi bi-cpu-fill display-1 text-primary"></i>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IS RAG -->
+<section class="mb-5">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h2 class="h4 fw-bold mb-3">What is RAG?</h2>
+      <p>
+        Retrieval-Augmented Generation (RAG) is an architecture pattern that enhances
+        Large Language Models (LLMs) by retrieving relevant documents from
+        external knowledge sources before generating a response.
+      </p>
+      <p class="text-muted">
+        Instead of relying only on pre-trained knowledge, RAG dynamically injects
+        domain-specific context at runtime.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW RAG WORKS -->
+<section class="mb-5">
+  <h2 class="h4 fw-bold mb-4">How RAG Works</h2>
+
+  <div class="row g-4">
+
+    <div class="col-md-3">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <h5 class="fw-bold">1️⃣ User Query</h5>
+          <p class="text-muted small">
+            The user asks a question.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <h5 class="fw-bold">2️⃣ Vector Search</h5>
+          <p class="text-muted small">
+            Embeddings convert text into vectors and retrieve similar documents.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <h5 class="fw-bold">3️⃣ Context Injection</h5>
+          <p class="text-muted small">
+            Retrieved documents are added to the prompt.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <h5 class="fw-bold">4️⃣ LLM Response</h5>
+          <p class="text-muted small">
+            The model generates grounded output.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ARCHITECTURE DIAGRAM -->
+<section class="mb-5">
+  <div class="card shadow-lg border-0">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="h4 fw-bold mb-0">RAG Reference Architecture</h2>
+        <span class="badge bg-primary">8K Diagram</span>
+      </div>
+
+      <figure class="mb-0">
+        <img
+          src="{{ url_for('static', filename='images/rag-architecture.png') }}"
+          alt="Retrieval Augmented Generation Flow - User to LLM Response"
+          class="img-fluid rounded-4 shadow-sm"
+          loading="lazy"
+        >
+        <figcaption class="mt-3 text-muted small text-center">
+          Flow: <strong>User → Embeddings → Vector DB → Context → LLM → Response</strong>
+        </figcaption>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- KEY COMPONENTS -->
+<section class="mb-5">
+  <h2 class="h4 fw-bold mb-4">Core Components</h2>
+
+  <div class="row g-4">
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold">Embeddings Model</h5>
+          <p class="text-muted small">
+            Converts text into vector representations.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold">Vector Database</h5>
+          <p class="text-muted small">
+            Stores and retrieves semantically similar documents.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="fw-bold">LLM</h5>
+          <p class="text-muted small">
+            Generates natural language responses using injected context.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ENTERPRISE BENEFITS -->
+<section class="mb-5">
+  <div class="card shadow-sm border-0 bg-light">
+    <div class="card-body">
+      <h2 class="h4 fw-bold mb-3">Why RAG for Enterprise?</h2>
+
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">✔ Reduces hallucinations</li>
+        <li class="list-group-item">✔ Enables domain-specific AI</li>
+        <li class="list-group-item">✔ Keeps proprietary data outside LLM training</li>
+        <li class="list-group-item">✔ Supports real-time knowledge updates</li>
+      </ul>
+
+    </div>
+  </div>
+</section>
+
+<!-- USE CASE -->
+<section>
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h2 class="h4 fw-bold mb-3">Example Use Case</h2>
+      <p>
+        In your <strong>Customer Support Triage Agent</strong>:
+      </p>
+      <ul>
+        <li>Retrieve order policy documents</li>
+        <li>Fetch shipping SLA rules</li>
+        <li>Pull return eligibility conditions</li>
+      </ul>
+      <p class="text-muted">
+        The LLM then generates a response grounded in company policy.
+      </p>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

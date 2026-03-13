@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <!-- Header -->
+  <div class="mb-5">
+    <h1 class="display-6 fw-semibold">Testing Agentic Systems</h1>
+    <p class="text-muted">
+      Testing an Agentic AI is fundamentally different from testing CRUD APIs.
+      We validate reasoning, tool selection, policy enforcement, RBAC, observability,
+      and end-to-end workflow behavior.
+    </p>
+  </div>
+
+  <!-- Testing Philosophy -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">1️⃣ What Are We Testing?</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">LLM Reasoning</h5>
+            <p class="small text-muted">
+              Intent classification, structured extraction, clarification logic,
+              hallucination resistance.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">Tool Invocation</h5>
+            <p class="small text-muted">
+              Correct API selection, parameter validation, idempotency,
+              safe retries.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="fw-semibold">Policy Guardrails</h5>
+            <p class="small text-muted">
+              Prevent unauthorized replacement, refund, overnight shipping,
+              or privilege escalation.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Telemetry / E2E Flow Image Section -->
+  <section class="mb-5">
+
+    <h2 class="h4 mb-4">End-to-End Telemetry Flow</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <figure class="mb-0">
+          <div class="ratio ratio-16x9">
+            <img src="{{ url_for('static', filename='images/testing_agents.png') }}"
+                 alt="UI to Orders API to Workflow API to Database with Structured Logs, Metrics, Distributed Traces and Security Events"
+                 class="img-fluid rounded-3 border">
+          </div>
+
+          <figcaption class="small text-muted mt-3 text-center">
+            UI → Orders API → Workflow API → DB
+            <br>
+            Structured Logs • Metrics • Distributed Traces • Security Events
+          </figcaption>
+        </figure>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Test Layers -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">2️⃣ Testing Layers</h2>
+
+    <div class="table-responsive">
+      <table class="table table-bordered align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Layer</th>
+            <th>Example</th>
+            <th>Tooling</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Prompt / LLM Unit Test</td>
+            <td>“Wrong address + overnight” → Classified correctly?</td>
+            <td>LangChain Eval / JSON schema validation</td>
+          </tr>
+          <tr>
+            <td>Tool-Calling Test</td>
+            <td>Replacement order created with correct item ID?</td>
+            <td>Pytest + Mocked APIs</td>
+          </tr>
+          <tr>
+            <td>Policy Test</td>
+            <td>Overnight shipping denied without entitlement?</td>
+            <td>Rule Engine Assertions</td>
+          </tr>
+          <tr>
+            <td>RBAC Test</td>
+            <td>Requires <code>replacement_create</code> role</td>
+            <td>JWT Role Inspection</td>
+          </tr>
+          <tr>
+            <td>E2E Integration</td>
+            <td>UI → API → Workflow → DB mutation verified</td>
+            <td>Postman / Newman / Cypress</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Keycloak & RBAC Validation -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">3️⃣ Security & Role Validation</h2>
+
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <p class="text-muted">
+          The <strong>cs-triage</strong> realm enforces role-based controls.
+          Critical operations such as:
+        </p>
+
+        <ul>
+          <li><code>replacement_create</code></li>
+          <li><code>order_write</code></li>
+          <li><code>ticket_write</code></li>
+        </ul>
+
+        <p class="text-muted">
+          Must be present in the JWT <code>realm_access.roles</code> claim before
+          any state-changing action is executed.
+        </p>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Observability Driven Testing -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">4️⃣ Observability-Driven Validation</h2>
+
+    <div class="row g-4">
+
+      <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <h6 class="fw-semibold">Distributed Tracing</h6>
+            <p class="small text-muted">
+              Correlation IDs across UI, Orders API, Workflow API.
+              Verify no missing span in decision path.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <h6 class="fw-semibold">Security Events</h6>
+            <p class="small text-muted">
+              Unauthorized action attempts must generate auditable events.
+              Validate token expiry and audience claims.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Chaos & Resilience -->
+  <section class="mb-5">
+    <h2 class="h4 mb-3">5️⃣ Chaos & Failure Injection</h2>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+
+        <ul class="mb-0">
+          <li>Orders API unavailable → Agent retries safely</li>
+          <li>Inventory unavailable → Alternative resolution suggested</li>
+          <li>Workflow timeout → Ticket auto-created</li>
+          <li>Expired JWT → Graceful re-authentication</li>
+        </ul>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Final Principle -->
+  <section>
+    <div class="alert alert-primary border-0 shadow-sm">
+      <strong>Key Principle:</strong>
+      An Agent is correct only if it produces the right reasoning,
+      selects the correct tool, respects policy,
+      enforces RBAC, and generates observable evidence of its decision path.
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}
